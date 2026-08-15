@@ -232,6 +232,7 @@ const uid = (p) => p + '_' + Math.random().toString(36).slice(2,8);
    role_assignments / club_settings ...
    ============================================================= */
 const CURRENT_YEAR = 2026;
+const APP_VERSION = '2026-08-16a'; // アップロード後の確認用（更新するたびに変わります）
 
 function seedDB(){
   return {
@@ -712,6 +713,7 @@ function LoginScreen(){
     <div class="logo">🏃</div>
     <h1>${esc(DB.clubSettings.clubName||'陸上クラブ')}</h1>
     <p>レッツ！アプリ</p>
+    <p style="font-size:11px;color:var(--muted);margin-top:2px">版 ${APP_VERSION}</p>
   </div>`));
 
   box.appendChild(el(`<div class="note note-proto" style="margin-bottom:16px">
