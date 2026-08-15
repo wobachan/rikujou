@@ -2643,7 +2643,7 @@ function SubmissionScreen(){
   if(!ev){ box.appendChild(el(`<div class="note note-warn">大会が見つかりません。</div>`)); return box; }
   const sub=ev.submission||{done:false,date:'',submittedBy:Session.userId,memo:'',docsUrl:''};
   box.appendChild(el(`<div class="card edge-officer"><h2>📤 申込完了の記録</h2>
-    <p class="sub">${esc(ev.name)}　主催者への申込完了をここに記録します（「LINEのどこに送ったっけ？」を防ぎます）。</p></div>`));
+    <p class="sub">${esc(ev.name)}　主催者への申込完了をここに記録します。</p></div>`));
   box.appendChild(el(`<div class="card">
     <label style="display:flex;align-items:center;gap:8px;padding:4px 0"><input type="checkbox" id="sub_done" ${sub.done?'checked':''} style="width:20px;height:20px"> <b>主催者へ申込完了した</b></label>
     <label class="f">申込日</label><input class="f" id="sub_date" type="date" value="${esc(sub.date||'')}">
