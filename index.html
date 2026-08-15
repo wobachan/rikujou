@@ -232,7 +232,7 @@ const uid = (p) => p + '_' + Math.random().toString(36).slice(2,8);
    role_assignments / club_settings ...
    ============================================================= */
 const CURRENT_YEAR = 2026;
-const APP_VERSION = '2026-08-16a'; // アップロード後の確認用（更新するたびに変わります）
+const APP_VERSION = '2026-08-16 07:54 作成'; // アップロード後の確認用（この日時が変わると最新データに自動更新）
 
 function seedDB(){
   return {
@@ -372,8 +372,14 @@ function seedDB(){
 const STORAGE_KEY = 'rikujo_clubhouse_v1';
 let DB = load();
 function load(){
-  try{ const s=localStorage.getItem(STORAGE_KEY); if(s) return migrate(JSON.parse(s)); }catch(e){}
-  return migrate(seedDB());
+  try{
+    const s=localStorage.getItem(STORAGE_KEY);
+    if(s){ const d=JSON.parse(s);
+      // 作成日時(APP_VERSION)が同じ＝そのまま。違う＝新しい版なので最新データに自動更新
+      if(d && d.__ver===APP_VERSION) return migrate(d);
+    }
+  }catch(e){}
+  const fresh=migrate(seedDB()); fresh.__ver=APP_VERSION; return fresh;
 }
 // 旧データを新しい構造へ（既存データを壊さずに補完）
 function migrate(db){
@@ -421,7 +427,7 @@ function fileToImageDataUrl(file, maxDim=1600, quality=0.7){
     r.onerror=rej; r.readAsDataURL(file); });
 }
 function fileToDataUrl(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
-function resetDB(){ DB = migrate(seedDB()); save(); }
+function resetDB(){ DB = migrate(seedDB()); DB.__ver = APP_VERSION; save(); }
 
 /* ---------- データ参照ヘルパー ---------- */
 const getUser  = id => DB.users.find(u=>u.id===id);
@@ -713,7 +719,7 @@ function LoginScreen(){
     <div class="logo">🏃</div>
     <h1>${esc(DB.clubSettings.clubName||'陸上クラブ')}</h1>
     <p>レッツ！アプリ</p>
-    <p style="font-size:11px;color:var(--muted);margin-top:2px">版 ${APP_VERSION}</p>
+    <p style="font-size:11px;color:var(--muted);margin-top:2px">${APP_VERSION}</p>
   </div>`));
 
   box.appendChild(el(`<div class="note note-proto" style="margin-bottom:16px">
