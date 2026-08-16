@@ -74,6 +74,21 @@
 
   footer{margin-top:20px; color:var(--muted); font-size:12px; text-align:center;}
 
+  /* 感想フォーム */
+  .q{margin:14px 0 4px;}
+  .q .ql{font-weight:700; font-size:14.5px; margin-bottom:7px;}
+  .rate{display:flex; gap:6px;}
+  .rate input{position:absolute; opacity:0; pointer-events:none;}
+  .rate label{flex:1; text-align:center; padding:10px 0; border:1.5px solid var(--line); border-radius:10px; font-weight:800; font-size:16px; color:var(--muted); cursor:pointer; background:var(--card); user-select:none;}
+  .rate input:checked + label{background:var(--green); color:#fff; border-color:var(--green);}
+  .rate label:hover{border-color:color-mix(in srgb,var(--green) 50%,var(--line));}
+  .scalecap{display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted); margin-top:4px;}
+  .fbtext{width:100%; min-height:84px; border:1.5px solid var(--line); border-radius:10px; padding:11px; font:inherit; font-size:14px; background:var(--card); color:var(--ink); box-sizing:border-box; resize:vertical;}
+  .copybtn{margin-top:14px; width:100%; background:var(--green); color:#fff; font-weight:800; font-size:15.5px; border:none; border-radius:999px; padding:13px; cursor:pointer;}
+  .copybtn:active{opacity:.9;}
+  .copied{color:var(--green); font-weight:700; font-size:13px; margin-top:8px; text-align:center; min-height:18px;}
+  .fbhint{font-size:12.5px; color:var(--muted); margin-top:8px; line-height:1.6;}
+
   @media print{
     :root{--soft:#fff; --card:#fff;}
     body{background:#fff;}
@@ -121,12 +136,95 @@
   </div>
 
   <div class="step s3">
-    <div class="step-h"><span class="num">3</span><h2>教えてほしいこと</h2></div>
-    <ol class="fb">
-      <li>迷った所・分かりにくかった言葉</li>
-      <li>「これは自分の作業がラクになりそう／ならなさそう」</li>
-      <li>足りない項目・あったらいいなと思った機能</li>
-    </ol>
+    <div class="step-h"><span class="num">3</span><h2>教えてほしいこと（5段階＋自由記述）</h2></div>
+
+    <div class="q">
+      <div class="ql">① 使いやすさ（迷わず使えましたか）</div>
+      <div class="rate">
+        <input type="radio" name="q1" id="q1_1" value="1"><label for="q1_1">1</label>
+        <input type="radio" name="q1" id="q1_2" value="2"><label for="q1_2">2</label>
+        <input type="radio" name="q1" id="q1_3" value="3"><label for="q1_3">3</label>
+        <input type="radio" name="q1" id="q1_4" value="4"><label for="q1_4">4</label>
+        <input type="radio" name="q1" id="q1_5" value="5"><label for="q1_5">5</label>
+      </div>
+      <div class="scalecap"><span>1・分かりにくい</span><span>5・とても分かりやすい</span></div>
+    </div>
+
+    <div class="q">
+      <div class="ql">② 役立ちそう（作業がラクになりそうですか）</div>
+      <div class="rate">
+        <input type="radio" name="q2" id="q2_1" value="1"><label for="q2_1">1</label>
+        <input type="radio" name="q2" id="q2_2" value="2"><label for="q2_2">2</label>
+        <input type="radio" name="q2" id="q2_3" value="3"><label for="q2_3">3</label>
+        <input type="radio" name="q2" id="q2_4" value="4"><label for="q2_4">4</label>
+        <input type="radio" name="q2" id="q2_5" value="5"><label for="q2_5">5</label>
+      </div>
+      <div class="scalecap"><span>1・あまり</span><span>5・とても</span></div>
+    </div>
+
+    <div class="q">
+      <div class="ql">③ 総合評価</div>
+      <div class="rate">
+        <input type="radio" name="q3" id="q3_1" value="1"><label for="q3_1">1</label>
+        <input type="radio" name="q3" id="q3_2" value="2"><label for="q3_2">2</label>
+        <input type="radio" name="q3" id="q3_3" value="3"><label for="q3_3">3</label>
+        <input type="radio" name="q3" id="q3_4" value="4"><label for="q3_4">4</label>
+        <input type="radio" name="q3" id="q3_5" value="5"><label for="q3_5">5</label>
+      </div>
+      <div class="scalecap"><span>1・低い</span><span>5・高い</span></div>
+    </div>
+
+    <div class="q">
+      <div class="ql">④ 自由記述（分かりにくかった言葉・あったらいい機能・感想など）</div>
+      <textarea class="fbtext" id="fb_free" placeholder="ご自由にご記入ください"></textarea>
+    </div>
+
+    <div class="q">
+      <div class="ql">お名前（任意）</div>
+      <input class="fbtext" id="fb_name" style="min-height:0;height:44px" placeholder="例：長嶋（会長）">
+    </div>
+
+    <button class="copybtn" id="fb_copy">📋 内容をコピーする</button>
+    <div class="copied" id="fb_copied"></div>
+    <textarea id="fb_out" style="display:none; width:100%; min-height:120px; margin-top:8px" readonly></textarea>
+    <div class="fbhint">コピーした内容を、<b>LINE で担当へ貼り付けて送信</b>してください。</div>
+  </div>
+
+  <div class="step" style="--tone:var(--purple)">
+    <div class="step-h"><span class="num" style="background:var(--purple)">📊</span><h2>このアプリの良い点・注意点（役員会での説明用）</h2></div>
+
+    <div style="border-left:4px solid var(--green); background:color-mix(in srgb,var(--green) 6%,var(--card)); border-radius:10px; padding:12px 14px; margin-top:6px">
+      <div style="font-weight:800; color:var(--green); margin-bottom:6px">✅ メリット</div>
+      <ul style="margin:0; padding-left:1.15em; font-size:14px; line-height:1.7">
+        <li><b>仕組みが人を支える</b>：締切・未回答・未払いを自動集計、LINE文面の自動生成、Excel一括登録／主催者提出用エントリーシートの出力で、<b>会長・事務局・会計の作業を減らし、さらに情報の共有・確認を容易にします。</b></li>
+        <li><b>誰でもすぐ使える</b>：URL／QRを開くだけ。スマホもPCも対応、インストール不要・無料。</li>
+        <li><b>ミスが減る</b>：登録番号つき名簿、対象学年の自動判定、出場種目数の上限チェック。</li>
+        <li><b>知識が年度をまたいで残る</b>：ルール・安全・知恵袋・トレーニング・規約・過去の大会や記録を蓄積。</li>
+        <li><b>自動で最新化</b>：配布ファイルを更新すると、各自の端末が自動で最新の予定・内容に切り替わります。</li>
+      </ul>
+    </div>
+
+    <div style="border-left:4px solid var(--amber); background:color-mix(in srgb,var(--amber) 7%,var(--card)); border-radius:10px; padding:12px 14px; margin-top:10px">
+      <div style="font-weight:800; color:var(--amber); margin-bottom:6px">⚠️ 注意点（今の試作段階の制約）</div>
+      <ul style="margin:0; padding-left:1.15em; font-size:14px; line-height:1.7">
+        <li><b>データは端末内だけ</b>：入力内容はその人のスマホ／PCの中だけに保存され、他の役員・保護者とは共有されません。</li>
+        <li><b>更新でデータがリセット</b>：最新版に切り替わるとき、その端末での入力（お試し分）は消えます。</li>
+        <li><b>簡易ログイン</b>：今はアカウントを選ぶ方式。Googleログインは本番で導入します。</li>
+        <li><b>保存容量に上限</b>：写真・PDFを貯めすぎると保存しきれないことがあります。</li>
+        <li><b>個人情報</b>：本番では実名を扱うため、安全な保管（権限管理）が前提になります。</li>
+      </ul>
+    </div>
+
+    <div style="border-left:4px solid var(--blue); background:color-mix(in srgb,var(--blue) 6%,var(--card)); border-radius:10px; padding:12px 14px; margin-top:10px">
+      <div style="font-weight:800; color:var(--blue); margin-bottom:6px">🚀 今後の見通し（本番化で解決すること）</div>
+      <ul style="margin:0; padding-left:1.15em; font-size:14px; line-height:1.7">
+        <li>サーバー接続（Firebase等）＋Googleログインで、<b>全員のデータをリアルタイム共有・恒久保存</b>。</li>
+        <li>端末をまたいでも同じデータ。<b>更新してもデータは消えません</b>。</li>
+        <li>会員／役員／管理者ごとの<b>安全なアクセス管理</b>。</li>
+        <li><b>外部からの大量アクセス・不正利用を防ぐ様々な仕組み</b>（ログイン必須＝Google認証、管理者が事前承認した会員のメールのみログイン可能、攻撃・ボットのブロック 等）。</li>
+        <li>※このクラブの規模（数十家庭・写真／PDFも年数十枚）なら、多くの場合<b>無料の範囲内</b>で運用できる見込みです（利用が大きく増えた場合のみ費用が発生）。</li>
+      </ul>
+    </div>
   </div>
 
   <div class="note safe">
@@ -156,6 +254,34 @@
     var a=document.getElementById('appurl'), b=document.getElementById('apptap');
     if(APP_URL){ a.textContent=APP_URL; a.href=APP_URL; b.href=APP_URL; }
     else { b.style.display='none'; }
+  })();
+
+  // 感想フォーム：入力内容をまとめてコピー（LINEに貼り付けて送ってもらう）
+  (function(){
+    var btn=document.getElementById('fb_copy'); if(!btn) return;
+    function pick(name){ var el=document.querySelector('input[name="'+name+'"]:checked'); return el?el.value:'-'; }
+    function build(){
+      var name=(document.getElementById('fb_name').value||'').trim();
+      var free=(document.getElementById('fb_free').value||'').trim();
+      return '【レッツ！アプリ お試し感想】\n'
+        + '① 使いやすさ：'+pick('q1')+'/5\n'
+        + '② 役立ちそう：'+pick('q2')+'/5\n'
+        + '③ 総合評価：'+pick('q3')+'/5\n'
+        + '④ 自由記述：'+(free||'（なし）')+'\n'
+        + 'お名前：'+(name||'（未記入）');
+    }
+    function done(){ var m=document.getElementById('fb_copied'); m.textContent='✅ コピーしました。LINEに貼り付けて送ってください。'; setTimeout(function(){m.textContent='';},6000); }
+    btn.onclick=function(){
+      var text=build();
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else { fallback(); }
+      function fallback(){
+        var ta=document.getElementById('fb_out'); ta.style.display='block'; ta.value=text; ta.focus(); ta.select();
+        try{ document.execCommand('copy'); done(); }
+        catch(e){ document.getElementById('fb_copied').textContent='下の枠の文字を長押しして全選択→コピーしてください。'; }
+      }
+    };
   })();
 </script>
 
