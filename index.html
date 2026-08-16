@@ -232,59 +232,63 @@ const uid = (p) => p + '_' + Math.random().toString(36).slice(2,8);
    role_assignments / club_settings ...
    ============================================================= */
 const CURRENT_YEAR = 2026;
-const APP_VERSION = '2026-08-16 07:54 作成'; // アップロード後の確認用（この日時が変わると最新データに自動更新）
+const APP_VERSION = '2026-08-16 20:40 作成'; // アップロード後の確認用（この日時が変わると最新データに自動更新）
 
 function seedDB(){
   return {
     year: CURRENT_YEAR,
     // ---- ユーザー（＝ログインする人。保護者/役員/管理者） ----
     users: [
-      { id:'u_hanako', name:'山田 花子', kana:'やまだ はなこ', email:'hanako@example.com', role:'member',  guardianId:'g_hanako', status:'active' },
-      { id:'u_ichiro', name:'山田 一郎', kana:'やまだ いちろう', email:'ichiro@example.com', role:'member',  guardianId:'g_ichiro', status:'active' },
-      { id:'u_tsato',  name:'佐藤 小五郎', kana:'さとう こごろう',   email:'tsato@example.com',  role:'admin',   guardianId:'g_tsato',  status:'active' },
-      { id:'u_tanakah',name:'田中 すみこ', kana:'たなか すみこ',   email:'tanakah@example.com',role:'officer', guardianId:'g_tanakah',status:'active' },
-      { id:'u_suzuki', name:'鈴木 みき', kana:'すずき みき',     email:'suzuki@example.com', role:'member',  guardianId:'g_suzuki', status:'active' },
+      { id:'u_ichiro', name:'アニマル浜口', kana:'あにまる はまぐち', email:'ichiro@example.com', role:'member',  guardianId:'g_ichiro', status:'active' },
+      { id:'u_tsato',  name:'梅宮 辰夫', kana:'うめみや たつお',   email:'tsato@example.com',  role:'admin',   guardianId:'g_tsato',  status:'active' },
+      { id:'u_tanakah',name:'小泉 純一郎', kana:'こいずみ じゅんいちろう',   email:'tanakah@example.com',role:'officer', guardianId:'g_tanakah',status:'active', staffRole:'事務局（大会申込み）' },
+      { id:'u_taka',   name:'長嶋 茂雄', kana:'ながしま しげお', email:'taka@example.com',   role:'officer', guardianId:'g_taka',   status:'active', staffRole:'会長' },
+      { id:'u_ito',    name:'渡辺 謙',   kana:'わたなべ けん',     email:'ito@example.com',    role:'officer', guardianId:'g_ito',    status:'active', staffRole:'会計役' },
+      { id:'u_suzuki', name:'浜田 雅功', kana:'はまだ まさとし',     email:'suzuki@example.com', role:'member',  guardianId:'g_suzuki', status:'active' },
+      { id:'u_koba2',  name:'工藤 静香', kana:'くどう しずか',       email:'shizuka@example.com', role:'member', guardianId:'g_koba2', status:'active' },
+      { id:'u_suzuki2',name:'小川 菜摘', kana:'おがわ なつみ',       email:'natsumi@example.com', role:'member', guardianId:'g_suzuki2', status:'active' },
       // 子どもがいない監督（コーチ）。保護者ではないが管理者。guardianId は null
-      { id:'u_coach',  name:'佐々木 健一', kana:'ささき けんいち', email:'coach@example.com', role:'admin',   guardianId:null, status:'active', staffRole:'監督' },
+      { id:'u_coach',  name:'松岡 修造', kana:'まつおか しゅうぞう', email:'coach@example.com', role:'admin',   guardianId:null, status:'active', staffRole:'監督' },
     ],
     // ---- 保護者名簿 ----
     guardians: [
-      { id:'g_hanako', name:'山田 花子', kana:'やまだ はなこ', phone:'090-xxxx-1111', status:'active' },
-      { id:'g_ichiro', name:'山田 一郎', kana:'やまだ いちろう', phone:'090-xxxx-2222', status:'active' },
-      { id:'g_tsato',  name:'佐藤 小五郎', kana:'さとう こごろう',   phone:'090-xxxx-3333', status:'active' },
-      { id:'g_tanakah',name:'田中 すみこ', kana:'たなか すみこ',   phone:'090-xxxx-4444', status:'active' },
-      { id:'g_suzuki', name:'鈴木 みき', kana:'すずき みき',     phone:'090-xxxx-5555', status:'active' },
-      { id:'g_taka', name:'森本 さゆり', kana:'もりもと さゆり', phone:'090-xxxx-6666', status:'active' },
-      { id:'g_ito',  name:'伊藤 まき',   kana:'いとう まき',     phone:'090-xxxx-7777', status:'active' },
-      { id:'g_wata', name:'藤井 ちか',   kana:'ふじい ちか',   phone:'090-xxxx-8888', status:'active' },
-      { id:'g_naka', name:'岡田 えり',   kana:'おかだ えり',   phone:'090-xxxx-9999', status:'active' },
-      { id:'g_koba', name:'小林 ゆか',   kana:'こばやし ゆか',   phone:'090-xxxx-0000', status:'active' },
+      { id:'g_ichiro', name:'アニマル浜口', kana:'あにまる はまぐち', phone:'090-xxxx-2222', status:'active' },
+      { id:'g_tsato',  name:'梅宮 辰夫', kana:'うめみや たつお',   phone:'090-xxxx-3333', status:'active' },
+      { id:'g_tanakah',name:'小泉 純一郎', kana:'こいずみ じゅんいちろう',   phone:'090-xxxx-4444', status:'active' },
+      { id:'g_suzuki', name:'浜田 雅功', kana:'はまだ まさとし',     phone:'090-xxxx-5555', status:'active' },
+      { id:'g_taka', name:'長嶋 茂雄', kana:'ながしま しげお', phone:'090-xxxx-6666', status:'active' },
+      { id:'g_ito',  name:'渡辺 謙',   kana:'わたなべ けん',     phone:'090-xxxx-7777', status:'active' },
+      { id:'g_wata', name:'杉浦 太陽',   kana:'すぎうら たいよう',   phone:'090-xxxx-8888', status:'active' },
+      { id:'g_naka', name:'中村 雅俊',   kana:'なかむら まさとし',   phone:'090-xxxx-9999', status:'active' },
+      { id:'g_koba', name:'木村 拓哉',   kana:'きむら たくや',   phone:'090-xxxx-0000', status:'active' },
+      { id:'g_koba2',   name:'工藤 静香', kana:'くどう しずか', phone:'090-xxxx-1212', status:'active' }, // 母（木村家）
+      { id:'g_suzuki2', name:'小川 菜摘', kana:'おがわ なつみ', phone:'090-xxxx-3434', status:'active' }, // 母（浜田家）
     ],
     // ---- 児童名簿 ----
     children: [
-      { id:'c_yt', name:'山田 太郎', kana:'やまだ たろう', grade:6, gender:'男', school:'みどり小', joinYear:2021, status:'active', regNo:'340', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:10' },
-      { id:'c_yh', name:'山田 ようこ', kana:'やまだ ようこ', grade:3, gender:'女', school:'みどり小', joinYear:2024, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:12' },
-      { id:'c_tk', name:'田中 健',   kana:'たなか けん',   grade:5, gender:'男', school:'ひがし小', joinYear:2022, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:14' },
-      { id:'c_sm', name:'佐藤 さなえ',kana:'さとう さなえ', grade:4, gender:'女', school:'みどり小', joinYear:2023, status:'active', regNo:'558', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:16' },
-      { id:'c_si', name:'鈴木 壮平', kana:'すずき そうへい',grade:2, gender:'男', school:'ひがし小', joinYear:2025, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:18' },
-      { id:'c_h1', name:'森本 けんた', kana:'もりもと けんた', grade:5, gender:'男', school:'みどり小', joinYear:2022, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:20' },
-      { id:'c_h2', name:'森本 ゆい',   kana:'もりもと ゆい',   grade:2, gender:'女', school:'みどり小', joinYear:2025, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:21' },
-      { id:'c_i1', name:'伊藤 そうた', kana:'いとう そうた',   grade:6, gender:'男', school:'ひがし小', joinYear:2021, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:22' },
-      { id:'c_i2', name:'伊藤 あかり', kana:'いとう あかり',   grade:4, gender:'女', school:'ひがし小', joinYear:2023, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:23' },
-      { id:'c_w1', name:'藤井 なおと', kana:'ふじい なおと', grade:3, gender:'男', school:'みなみ小', joinYear:2024, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:24' },
-      { id:'c_w2', name:'藤井 けい',   kana:'ふじい けい',   grade:1, gender:'女', school:'みなみ小', joinYear:2026, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:25' },
-      { id:'c_n1', name:'岡田 ともき',   kana:'おかだ ともき',   grade:6, gender:'男', school:'みどり小', joinYear:2021, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:26' },
-      { id:'c_n2', name:'岡田 ひなた', kana:'おかだ ひなた', grade:5, gender:'女', school:'みどり小', joinYear:2022, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:27' },
-      { id:'c_k1', name:'小林 だいき', kana:'こばやし だいき', grade:4, gender:'男', school:'ひがし小', joinYear:2023, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:28' },
-      { id:'c_k2', name:'小林 さき',   kana:'こばやし さき',   grade:2, gender:'女', school:'ひがし小', joinYear:2025, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:29' },
+      { id:'c_yt', name:'浜口 大地', kana:'はまぐち だいち', grade:6, gender:'男', school:'みどり小', joinYear:2021, status:'active', regNo:'340', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:10' },
+      { id:'c_yh', name:'浜口 京子', kana:'はまぐち きょうこ', grade:3, gender:'女', school:'みどり小', joinYear:2024, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:12' },
+      { id:'c_tk', name:'小泉 進次郎',   kana:'こいずみ しんじろう',   grade:5, gender:'男', school:'ひがし小', joinYear:2022, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:14' },
+      { id:'c_tk2',name:'小泉 孝太郎',   kana:'こいずみ こうたろう',   grade:6, gender:'男', school:'ひがし小', joinYear:2021, status:'active', note:'進次郎の兄', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:15' },
+      { id:'c_sm', name:'梅宮 アンナ',kana:'うめみや あんな', grade:4, gender:'女', school:'みどり小', joinYear:2023, status:'active', regNo:'558', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:16' },
+      { id:'c_si', name:'ハマ・オカモト', kana:'はま おかもと',grade:2, gender:'男', school:'ひがし小', joinYear:2025, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:18' },
+      { id:'c_h1', name:'長嶋 一茂', kana:'ながしま かずしげ', grade:5, gender:'男', school:'みどり小', joinYear:2022, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:20' },
+      { id:'c_h2', name:'長嶋 三奈',   kana:'ながしま みな',   grade:2, gender:'女', school:'みどり小', joinYear:2025, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:21' },
+      { id:'c_i1', name:'渡辺 大', kana:'わたなべ だい',   grade:6, gender:'男', school:'ひがし小', joinYear:2021, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:22' },
+      { id:'c_i2', name:'渡辺 杏', kana:'わたなべ あん',   grade:4, gender:'女', school:'ひがし小', joinYear:2023, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:23' },
+      { id:'c_w1', name:'杉浦 青空', kana:'すぎうら せいあ', grade:3, gender:'男', school:'みなみ小', joinYear:2024, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:24' },
+      { id:'c_w2', name:'杉浦 希空',   kana:'すぎうら のあ',   grade:1, gender:'女', school:'みなみ小', joinYear:2026, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:25' },
+      { id:'c_n1', name:'中村 俊太',   kana:'なかむら しゅんた',   grade:6, gender:'男', school:'みどり小', joinYear:2021, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:26' },
+      { id:'c_n2', name:'中村 里砂', kana:'なかむら りさ', grade:5, gender:'女', school:'みどり小', joinYear:2022, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:27' },
+      { id:'c_k1', name:'木村 心美', kana:'きむら ここみ', grade:4, gender:'女', school:'ひがし小', joinYear:2023, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:28' },
+      { id:'c_k2', name:'木村 光希',   kana:'きむら こうき',   grade:2, gender:'女', school:'ひがし小', joinYear:2025, status:'active', note:'', enteredBy:'u_tsato', updatedAt:'2026-04-05T20:29' },
     ],
     // ---- 保護者⇔児童（多対多） ----
     guardianChildren: [
-      { guardianId:'g_hanako', childId:'c_yt' },
-      { guardianId:'g_hanako', childId:'c_yh' },
       { guardianId:'g_ichiro', childId:'c_yt' },
       { guardianId:'g_ichiro', childId:'c_yh' },
       { guardianId:'g_tanakah',childId:'c_tk' },
+      { guardianId:'g_tanakah',childId:'c_tk2' },
       { guardianId:'g_tsato',  childId:'c_sm' },
       { guardianId:'g_suzuki', childId:'c_si' },
       { guardianId:'g_taka', childId:'c_h1' }, { guardianId:'g_taka', childId:'c_h2' },
@@ -292,6 +296,8 @@ function seedDB(){
       { guardianId:'g_wata', childId:'c_w1' }, { guardianId:'g_wata', childId:'c_w2' },
       { guardianId:'g_naka', childId:'c_n1' }, { guardianId:'g_naka', childId:'c_n2' },
       { guardianId:'g_koba', childId:'c_k1' }, { guardianId:'g_koba', childId:'c_k2' },
+      { guardianId:'g_koba2', childId:'c_k1' }, { guardianId:'g_koba2', childId:'c_k2' }, // 工藤静香＝木村家の母
+      { guardianId:'g_suzuki2', childId:'c_si' }, // 小川菜摘＝浜田家の母
     ],
     // ---- クラブ標準設定（Phase 2 の大会ルールの土台） ----
     clubSettings: {
@@ -319,11 +325,10 @@ function seedDB(){
     events: [
       {"id": "e_y1", "name": "防府 中・長距離記録会", "type": "track", "date": "2026-05-09", "venueId": "v_y1", "clubOpen": "", "clubClose": "", "hostClose": "2026-05-01", "feePerEvent": null, "relayTeamFee": null, "feeFlat": null, "applyMethod": null, "categoryRule": null, "categories": [], "status": "preopen", "rules": {"eligibility": null, "indivEvents": null, "relay": null, "eventCatalog": null}, "meetPlace": "", "meetTime": "", "outline": "1500m", "docsUrl": "", "note": "参加料550円／競技開始15:30", "docs": [], "relayTeams": [], "submission": null, "enteredBy": "u_tanakah", "updatedAt": "2026-04-01T09:00"},
       {"id": "e_y2", "name": "第77回 山口県陸上競技強化記録会", "type": "track", "date": "2026-05-16", "venueId": "v_y2", "clubOpen": "", "clubClose": "", "hostClose": "2026-05-07", "feePerEvent": null, "relayTeamFee": null, "feeFlat": null, "applyMethod": null, "categoryRule": null, "categories": [], "status": "preopen", "rules": {"eligibility": null, "indivEvents": null, "relay": null, "eventCatalog": null}, "meetPlace": "", "meetTime": "", "outline": "100m/800m/1000m/走幅跳/4×100mR/200・400等", "docsUrl": "", "note": "参加料550円／9:30", "docs": [], "relayTeams": [], "submission": null, "enteredBy": "u_tanakah", "updatedAt": "2026-04-01T09:00"},
-      {"id": "e_y3", "name": "宇部リレーカーニバル", "type": "track", "date": "2026-06-06", "venueId": "v_y3", "clubOpen": "", "clubClose": "", "hostClose": "", "feePerEvent": null, "relayTeamFee": null, "feeFlat": null, "applyMethod": null, "categoryRule": null, "categories": [], "status": "preopen", "rules": {"eligibility": null, "indivEvents": null, "relay": null, "eventCatalog": null}, "meetPlace": "", "meetTime": "", "outline": "100m/走幅跳/4×100mR/50m・ボール投げ", "docsUrl": "", "note": "締切・参加料は要項確認", "docs": [], "relayTeams": [], "submission": null, "enteredBy": "u_tanakah", "updatedAt": "2026-04-01T09:00"},
       {"id": "e_y4", "name": "第32回 山口県小学生春季陸上競技大会", "type": "track", "date": "2026-06-13", "venueId": "v_y2", "clubOpen": "", "clubClose": "", "hostClose": "2026-05-05", "feePerEvent": null, "relayTeamFee": null, "feeFlat": null, "applyMethod": null, "categoryRule": null, "categories": [], "status": "preopen", "rules": {"eligibility": "3年生以上", "indivEvents": null, "relay": null, "eventCatalog": null}, "meetPlace": "", "meetTime": "", "outline": "80mH/走幅跳/走高跳/4×100mR 他（3年は100mのみ）", "docsUrl": "", "note": "参加料200円／9:00", "docs": [], "relayTeams": [], "submission": null, "enteredBy": "u_tanakah", "updatedAt": "2026-04-01T09:00"},
       {"id": "e_y5", "name": "第38回 山口県小学生陸上競技選手権大会", "type": "track", "date": "2026-07-05", "venueId": "v_y2", "clubOpen": "", "clubClose": "", "hostClose": "2026-06-05", "feePerEvent": null, "relayTeamFee": null, "feeFlat": null, "applyMethod": null, "categoryRule": null, "categories": [], "status": "preopen", "rules": {"eligibility": "3年生以上", "indivEvents": null, "relay": null, "eventCatalog": null}, "meetPlace": "", "meetTime": "", "outline": "男/女/混リレー・ジャベリック 他（3年は100mのみ・最大3種）", "docsUrl": "", "note": "参加料900円／9:00", "docs": [], "relayTeams": [], "submission": null, "enteredBy": "u_tanakah", "updatedAt": "2026-04-01T09:00"},
-      {"id": "e_y6", "name": "日清食品カップ 山口県小学生陸上競技交流大会", "type": "track", "date": "2026-09-06", "venueId": "v_y2", "clubOpen": "", "clubClose": "", "hostClose": "2026-08-07", "feePerEvent": null, "relayTeamFee": null, "feeFlat": null, "applyMethod": null, "categoryRule": null, "categories": [], "status": "preopen", "rules": {"eligibility": "4年生以上", "indivEvents": null, "relay": null, "eventCatalog": null}, "meetPlace": "", "meetTime": "", "outline": "混合リレー/コンバインドA・B（4年は100mのみ）", "docsUrl": "", "note": "参加料1000円／9:00", "docs": [], "relayTeams": [], "submission": null, "enteredBy": "u_tanakah", "updatedAt": "2026-04-01T09:00"},
-      {"id": "e_y7", "name": "第78回 山口県陸上競技強化記録会", "type": "track", "date": "2026-09-23", "venueId": "v_y2", "clubOpen": "", "clubClose": "2026-08-26", "hostClose": "2026-09-09", "feePerEvent": null, "relayTeamFee": null, "feeFlat": null, "applyMethod": null, "categoryRule": null, "categories": [], "status": "preopen", "rules": {"eligibility": null, "indivEvents": null, "relay": null, "eventCatalog": null}, "meetPlace": "", "meetTime": "", "outline": "100m/800m/1000m/200・400等", "docsUrl": "", "note": "参加料550円／9:30", "docs": [], "relayTeams": [], "submission": null, "enteredBy": "u_tanakah", "updatedAt": "2026-04-01T09:00"},
+      {"id": "e_y6", "name": "日清食品カップ 山口県小学生陸上競技交流大会", "type": "track", "date": "2026-09-06", "venueId": "v_y2", "clubOpen": "", "clubClose": "2026-08-25", "hostClose": "2026-09-01", "feePerEvent": null, "relayTeamFee": null, "feeFlat": null, "applyMethod": null, "categoryRule": null, "categories": [], "status": "open", "rules": {"eligibility": "4年生以上", "indivEvents": null, "relay": null, "eventCatalog": null}, "meetPlace": "", "meetTime": "", "outline": "混合リレー/コンバインドA・B（4年は100mのみ）", "docsUrl": "", "note": "参加料1000円／9:00", "docs": [], "relayTeams": [], "submission": null, "enteredBy": "u_tanakah", "updatedAt": "2026-04-01T09:00"},
+      {"id": "e_y7", "name": "第78回 山口県陸上競技強化記録会", "type": "track", "date": "2026-09-23", "venueId": "v_y2", "clubOpen": "", "clubClose": "2026-08-26", "hostClose": "2026-09-09", "feePerEvent": null, "relayTeamFee": null, "feeFlat": null, "applyMethod": null, "categoryRule": null, "categories": [], "status": "open", "rules": {"eligibility": null, "indivEvents": null, "relay": null, "eventCatalog": null}, "meetPlace": "", "meetTime": "", "outline": "100m/800m/1000m/200・400等", "docsUrl": "", "note": "参加料550円／9:30", "docs": [], "relayTeams": [], "submission": null, "enteredBy": "u_tanakah", "updatedAt": "2026-04-01T09:00"},
       {"id": "e_y8", "name": "令和8年度 山口県スポーツ大会陸上競技", "type": "track", "date": "2026-09-27", "venueId": "v_y2", "clubOpen": "", "clubClose": "2026-08-12", "hostClose": "2026-08-21", "feePerEvent": null, "relayTeamFee": null, "feeFlat": null, "applyMethod": null, "categoryRule": null, "categories": [], "status": "preopen", "rules": {"eligibility": "4年生以上", "indivEvents": null, "relay": null, "eventCatalog": null}, "meetPlace": "", "meetTime": "", "outline": "", "docsUrl": "", "note": "参加料無料／9:00", "docs": [], "relayTeams": [], "submission": null, "enteredBy": "u_tanakah", "updatedAt": "2026-04-01T09:00"},
       {"id": "e_y9", "name": "田島直人記念陸上競技大会", "type": "track", "date": "2026-10-25", "venueId": "v_y2", "clubOpen": "", "clubClose": "", "hostClose": "2026-09-25", "feePerEvent": null, "relayTeamFee": null, "feeFlat": null, "applyMethod": null, "categoryRule": null, "categories": [], "status": "preopen", "rules": {"eligibility": "5年生以上", "indivEvents": null, "relay": null, "eventCatalog": null}, "meetPlace": "", "meetTime": "", "outline": "走幅跳/走高跳/4×100mR 他（5,6年選抜）", "docsUrl": "", "note": "参加料880円／9:30", "docs": [], "relayTeams": [], "submission": null, "enteredBy": "u_tanakah", "updatedAt": "2026-04-01T09:00"},
       {"id": "e_y10", "name": "第1回 山口県小学生陸上競技記録会", "type": "track", "date": "2026-11-14", "venueId": "v_y4", "clubOpen": "", "clubClose": "", "hostClose": "2026-10-09", "feePerEvent": null, "relayTeamFee": null, "feeFlat": null, "applyMethod": null, "categoryRule": null, "categories": [], "status": "preopen", "rules": {"eligibility": "3年生以上", "indivEvents": null, "relay": null, "eventCatalog": null}, "meetPlace": "", "meetTime": "", "outline": "80mH/走幅跳/4×100mR 他", "docsUrl": "", "note": "参加料800円／9:00", "docs": [], "relayTeams": [], "submission": null, "enteredBy": "u_tanakah", "updatedAt": "2026-04-01T09:00"},
@@ -379,7 +384,88 @@ function load(){
       if(d && d.__ver===APP_VERSION) return migrate(d);
     }
   }catch(e){}
-  const fresh=migrate(seedDB()); fresh.__ver=APP_VERSION; return fresh;
+  const fresh=applyTrialState(migrate(seedDB())); fresh.__ver=APP_VERSION; return fresh;
+}
+// お試し用：締切の補完＋過去大会を「終了・提出済み・実際に近い参加状況」にしておく
+function applyTrialState(db){
+  const CUT = '2026-08-01'; // この日より前の開催日は終了扱い（お試し用）
+  const staff = (db.users||[]).find(u=>/事務局/.test(u.staffRole||''))
+             || (db.users||[]).find(u=>u.role==='admin')
+             || (db.users||[]).find(u=>u.role==='officer');
+  const by = staff ? staff.id : ((db.users||[])[0]||{}).id;
+  const venName = id => { const v=(db.venues||[]).find(x=>x.id===id); return v?v.name:''; };
+  // 登録番号（3桁）を付与。すでに番号のある子はそのまま。入団したての1人だけ未付与のまま残す。
+  const REG=['112','128','203','215','247','266','319','334','356','372','405','421','448','467','483','506','529','541','577','594'];
+  const active=(db.children||[]).filter(c=>c.status==='active').slice()
+    .sort((a,b)=>(a.joinYear||0)-(b.joinYear||0) || String(a.id).localeCompare(String(b.id)));
+  const noReg=active.filter(c=>!c.regNo);
+  const rookie=noReg.length?noReg[noReg.length-1]:null; // 最も新しく入った未付番の子＝入団したて
+  let ri=0;
+  active.forEach(c=>{ if(c.regNo||c===rookie) return; c.regNo=REG[ri++]||String(600+ri); });
+  // 日付計算（タイムゾーンの影響を受けないローカル計算）
+  const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const shift = (iso, days, months) => { if(!iso) return ''; const [y,m,dd]=iso.split('-').map(Number); const d=new Date(y,m-1,dd); if(months) d.setMonth(d.getMonth()+months); if(days) d.setDate(d.getDate()+days); return fmt(d); };
+  // 参加費（1種目あたり・リレー除く）… 予定表PDFの参加料より。宇部リレーカーニバル(e_y3)は参加料が未記載のため空のまま
+  const FEE = { e_y1:550, e_y2:550, e_y4:200, e_y5:900, e_y6:1000, e_y7:550, e_y8:0, e_y9:880, e_y10:800, e_y11:550, e_y12:550, e_y13:800, e_y14:550 };
+  (db.events||[]).forEach(e=>{
+    // 参加費の初期入力（未設定のもののみ）
+    if(FEE[e.id]!==undefined && (e.feePerEvent===null || e.feePerEvent===undefined || e.feePerEvent==='')) e.feePerEvent = FEE[e.id];
+    // 締切未設定の補完：団内締切＝提出締切の約1ヶ月前、団内申込開始＝団内締切の2週間前
+    if(!e.clubClose && e.hostClose) e.clubClose = shift(e.hostClose, 0, -1);
+    if(!e.clubOpen  && e.clubClose) e.clubOpen  = shift(e.clubClose, -14, 0);
+    // ここから過去大会（お試し用）
+    if(!e.date || e.date>=CUT) return;
+    e.status='done';
+    // 主催者への提出も完了した記録
+    e.submission={ done:true, date:(e.hostClose||e.clubClose||e.date), submittedBy:by,
+      memo:'（お試し用サンプル：提出済み）', docsUrl:'', enteredBy:by, updatedAt:nowJST() };
+    // 参加状況：みらいふスタジアム開催（強化記録会を除く）＝4年以上が参加／それ以外＝全学年から約半数
+    const elig=(e.rules&&e.rules.eligibility)?e.rules.eligibility:db.clubSettings.defaultEligibility;
+    const grades=eligibleGrades(elig);
+    const seniorOnly = /みらいふ/.test(venName(e.venueId)) && !/強化記録会/.test(e.name||'');
+    const isTrack = (e.type==='track');
+    const kyoka = /強化記録会/.test(e.name||''); // 強化記録会は男女とも800m、それ以外は男子1000m・女子800m
+    const kids=(db.children||[]).filter(c=>c.status==='active'&&grades.includes(c.grade));
+    kids.forEach((c,i)=>{
+      if((db.participations||[]).some(p=>p.eventId===e.id&&p.childId===c.id)) return;
+      const join = seniorOnly ? (c.grade>=4) : (i%2===0); // 4年以上 or 交互で約半数
+      let evItems=[];
+      if(join && isTrack){
+        const kind = kyoka ? '800' : (c.gender==='男' ? '1000' : '800');
+        const item = kind+'m';
+        evItems=[item];
+        if(!(db.records||[]).some(r=>r.eventId===e.id&&r.childId===c.id&&r.item===item)){
+          db.records.push({ id:uid('r'), childId:c.id, item, mark:mkMark(kind,c.grade, i*3 + Number(e.date.slice(5,7))),
+            date:e.date, eventName:e.name, eventId:e.id, grade:c.grade, rank:null, enteredBy:by, updatedAt:nowJST() });
+        }
+      }
+      db.participations.push({ id:uid('p'), eventId:e.id, childId:c.id,
+        status: join?'participate':'decline', events:evItems, relay:'no', attend:'no', category:null,
+        enteredBy:by, updatedAt:nowJST() });
+    });
+  });
+  // 受付中の大会は、役員デモ用に数名だけ回答済みにしておく（全員未回答を避け、母数表示も分かりやすく）
+  (db.events||[]).forEach(e=>{
+    if(e.status!=='open') return;
+    const elig=(e.rules&&e.rules.eligibility)?e.rules.eligibility:db.clubSettings.defaultEligibility;
+    const grades=eligibleGrades(elig);
+    const kids=(db.children||[]).filter(c=>c.status==='active'&&grades.includes(c.grade));
+    ['participate','participate','decline'].forEach((st,i)=>{ // 3名（参加2・不参加1）が回答済み
+      const c=kids[i]; if(!c) return;
+      if((db.participations||[]).some(p=>p.eventId===e.id&&p.childId===c.id)) return;
+      db.participations.push({ id:uid('p'), eventId:e.id, childId:c.id, status:st,
+        events: st==='participate'?['100m']:[], relay:'no', attend:'no', category:null, enteredBy:by, updatedAt:nowJST() });
+    });
+  });
+  return db;
+}
+// お試し用の記録タイム生成（適当だが学年で緩やかに変化）。kind:'800'|'1000'
+function mkMark(kind, grade, seed){
+  const base = kind==='1000' ? 205 : 158;      // 6年生の目安（秒）
+  const perGrade = kind==='1000' ? 12 : 9;      // 1学年下がるごとに遅くなる秒数
+  const sec = base + (6-grade)*perGrade + ((seed*13+3)%10);
+  const m = Math.floor(sec/60), s = sec - m*60;
+  return `${m}:${s.toFixed(2).padStart(5,'0')}`;
 }
 // 旧データを新しい構造へ（既存データを壊さずに補完）
 function migrate(db){
@@ -427,7 +513,7 @@ function fileToImageDataUrl(file, maxDim=1600, quality=0.7){
     r.onerror=rej; r.readAsDataURL(file); });
 }
 function fileToDataUrl(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
-function resetDB(){ DB = migrate(seedDB()); DB.__ver = APP_VERSION; save(); }
+function resetDB(){ DB = applyTrialState(migrate(seedDB())); DB.__ver = APP_VERSION; save(); }
 
 /* ---------- データ参照ヘルパー ---------- */
 const getUser  = id => DB.users.find(u=>u.id===id);
@@ -491,6 +577,9 @@ function daysUntil(dateStr){
 const eventDeadline = ev => (ev && (ev.clubClose || ev.hostClose)) || '';
 const WEEKDAYS=['日','月','火','水','木','金','土'];
 function fmtDate(dateStr){ if(!dateStr) return '—'; const [y,m,d]=dateStr.split('-'); const wd=WEEKDAYS[new Date(Number(y),Number(m)-1,Number(d)).getDay()]; return `${y}/${Number(m)}/${Number(d)}(${wd})`; }
+// 月日のみ（曜日つき）… 一覧で大会名と同じ大きさに並べる用
+function fmtMD(dateStr){ if(!dateStr) return ''; const [y,m,d]=dateStr.split('-'); const wd=WEEKDAYS[new Date(Number(y),Number(m)-1,Number(d)).getDay()]; return `${Number(m)}/${Number(d)}(${wd})`; }
+function yearOf(dateStr){ return dateStr ? dateStr.split('-')[0]+'年' : ''; }
 function eventYear(ev){ const y=ev.date?Number(ev.date.slice(0,4)):NaN; return isNaN(y)?(DB.year||0):y; }
 // 添付ファイルのおおよそのバイト数（dataURLのbase64長から換算）
 function docBytes(doc){ const s=doc&&doc.dataUrl?doc.dataUrl.length:0; return Math.floor(s*0.75); }
@@ -737,8 +826,10 @@ function LoginScreen(){
     users.forEach(u=>{
       const r = ROLE[u.role];
       const kidsArr = childrenOfGuardian(u.guardianId);
-      const sub = kidsArr.length ? 'お子さん：'+kidsArr.map(c=>c.name).join('・')
-        : (u.staffRole ? u.staffRole+'（保護者以外）' : '保護者以外');
+      const subParts = [];
+      if(u.staffRole) subParts.push('🎽 '+u.staffRole);
+      subParts.push(kidsArr.length ? 'お子さん：'+kidsArr.map(c=>c.name).join('・') : '保護者以外');
+      const sub = subParts.join('　・　');
       const a = el(`<div class="acct">
         <div class="av" style="background:${r.color}">${esc(u.name.slice(0,1))}</div>
         <div class="info"><b>${esc(u.name)}</b><small>${esc(sub)}</small></div>
@@ -758,7 +849,7 @@ function UserBar(){
   const eff  = ROLE[Session.effectiveRole()];
   const bar = el(`<div class="userbar"></div>`);
   bar.appendChild(el(`<div class="who">
-    <b>${esc(u.name)}</b>
+    <b>${esc(u.name)}${u.staffRole?` <span style="font-weight:700;color:var(--green);font-size:12px">（${esc(u.staffRole)}）</span>`:''}</b>
     <small>${esc(u.email)}</small>
   </div>`));
   bar.appendChild(el(`<span class="badge ${base.badge}">${esc(base.label)}</span>`));
@@ -791,14 +882,13 @@ function HomeScreen(){
   // 会員共通メニュー（黒＝共通）
   const commonMenu = [
     ['🔍','検索','大会・会場・情報を探す','search'],
-    ['📅','大会','日程・要項・会場','events'],
-    ['🏆','大会申し込み','参加・種目・リレー・帯同','events'],
+    ['📅','大会','日程・要項・申込み','events'],
     ['📈','記録・自己ベスト','タイム履歴','records'],
+    ['🗺️','会場情報','地図・集合場所','venues'],
     ['🏃','トレーニング図鑑','練習メニュー','content','training'],
     ['📚','陸上ルール','種目・リレー','content','rules'],
     ['🛡️','安全・安心','熱中症・けが予防','content','safety'],
     ['💡','クラブの知恵袋','監督・保護者の工夫','content','knowledge'],
-    ['🗺️','会場情報','地図・集合場所','venues'],
     ['📜','クラブ規約','最新版','content','docs'],
   ];
 
@@ -911,24 +1001,27 @@ function OfficerTodoCard(){
     <p class="sub">受付中の大会から要対応を自動集計しています。</p>
   </div>`);
   const items=[];
+  const md = e => fmtMD(e.date); // 先頭に付ける月日
+  const CL_ANSWER='color:var(--s-alert);font-weight:700';  // 未回答＝赤
+  const CL_PAY='color:#c2410c;font-weight:700';            // 未払い＝オレンジ
   DB.events.filter(e=>e.status!=='draft' && e.status!=='done').forEach(e=>{
     const label = e.type==='road'?'未報告':'未回答';
     if(e.status==='open'){
       const s=eventResponseSummary(e);
-      if(s.notanswered>0) items.push(['🔴',`${e.name} ${label} ${s.notanswered}名`,{name:'responses',p:{eventId:e.id}}]);
+      if(s.notanswered>0) items.push(['🔴',`${md(e)} ${e.name} ${label} ${s.notanswered}名（${s.target}名中）`,{name:'responses',p:{eventId:e.id}},CL_ANSWER]);
       const d=daysUntil(eventDeadline(e));
-      if(d!==null && d>=0 && d<=3) items.push(['🟠',`${e.name} 申込締切あと${d}日`,{name:'lineText',p:{eventId:e.id}}]);
+      if(d!==null && d>=0 && d<=3) items.push(['🟠',`${md(e)} ${e.name} 申込締切あと${d}日`,{name:'lineText',p:{eventId:e.id}},'']);
       const over=DB.children.filter(c=>c.status==='active').some(c=>{ const p=getParticipation(e.id,c.id); return p&&p.status==='participate'&&checkLimit(e,p.events||[],p.relay).over; });
-      if(over) items.push(['🔴',`${e.name} 出場制限の超過あり`,{name:'responses',p:{eventId:e.id}}]);
+      if(over) items.push(['🔴',`${md(e)} ${e.name} 出場制限の超過あり`,{name:'responses',p:{eventId:e.id}},'']);
     }
-    if(feeApplies(e)){ const ps=paymentSummary(e); if(ps.unpaid>0) items.push(['🔴',`${e.name} 未払い ${ps.unpaid}名（${yen(ps.unpaidAmt)}）`,{name:'payments',p:{eventId:e.id}}]); }
+    if(feeApplies(e)){ const ps=paymentSummary(e); if(ps.unpaid>0) items.push(['💰',`${md(e)} ${e.name} 未払い ${ps.unpaid}名（${yen(ps.unpaidAmt)}）`,{name:'payments',p:{eventId:e.id}},CL_PAY]); }
     const dd=daysUntil(eventDeadline(e));
-    if(dd!==null && dd<0 && !(e.submission&&e.submission.done)) items.push(['🟠',`${e.name} 申込完了の記録が未`,{name:'submission',p:{eventId:e.id}}]);
-    if(recordsNeeded(e)){ const rp=recordsProgress(e); items.push(['🔴',`${e.name} 記録入力が未（${rp.entered}/${rp.total}）`,{name:'recordEntry',p:{eventId:e.id}}]); }
+    if(dd!==null && dd<0 && !(e.submission&&e.submission.done)) items.push(['🟠',`${md(e)} ${e.name} 申込完了の記録が未`,{name:'submission',p:{eventId:e.id}},'']);
+    if(recordsNeeded(e)){ const rp=recordsProgress(e); items.push(['🔴',`${md(e)} ${e.name} 記録入力が未（${rp.entered}/${rp.total}）`,{name:'recordEntry',p:{eventId:e.id}},'']); }
   });
   if(!items.length){ box.appendChild(el(`<div class="note note-info" style="margin-top:8px">🟢 いま対応が必要な項目はありません。</div>`)); return box; }
-  items.forEach(([ic,txt,to])=>{
-    const r=el(`<div class="row" style="margin-top:8px"><span style="font-size:18px">${ic}</span><div class="main"><b>${esc(txt)}</b></div><span class="chev">›</span></div>`);
+  items.forEach(([ic,txt,to,st])=>{
+    const r=el(`<div class="row" style="margin-top:8px"><span style="font-size:18px">${ic}</span><div class="main"><b style="${st||''}">${esc(txt)}</b></div><span class="chev">›</span></div>`);
     r.onclick=()=>go(to.name,to.p); box.appendChild(r);
   });
   return box;
@@ -1495,9 +1588,7 @@ function lineTextRecords(ev){
 function EventsScreen(){
   const box = el('<div class="stack"></div>');
   const canEdit = Session.can('officer');
-  const head = el(`<div class="card ${canEdit?'edge-officer':''}">
-    <h2>📅 大会</h2><p class="sub">${DB.events.length}件${canEdit?'':'　※タップで詳細'}</p></div>`);
-  box.appendChild(head);
+  // 見出しカードは省略（画面上部の黒帯に「大会」と表示されるため重複を避ける）
 
   // ツールバー（登録・一括取り込み・カレンダー出力）
   const tools = el(`<div class="card"><div class="btn-row"></div></div>`);
@@ -1525,28 +1616,36 @@ function EventsScreen(){
     list.forEach(e=>{ e.__t = memberEventTier(e); });
     list.sort((a,b)=> a.__t.order-b.__t.order || (a.date||'').localeCompare(b.date||''));
   }
-  const GROUP={ A:'🔴 申込みが必要な大会', B:'📅 これからの大会（受付前）', C:'✅ 申込み済み・終了した大会' };
+  const GROUP={ 0:'🔴 未返答（申込みが必要）', 1:'📅 受付前（もうすぐ受付開始）', 2:'✅ 返答済み', 3:'🏁 終了・対象外の大会' };
   let lastGroup=null;
   list.forEach(e=>{
     const v = getVenue(e.venueId);
-    // 会員向けはグループ見出しを挿入
+    // 会員向けはグループ見出しを挿入（未返答／受付前／返答済み／終了・対象外）
     if(!canEdit){
-      const g = e.__t.order===0?'A':(e.__t.order===1?'B':'C');
+      const g = e.__t.order;
       if(g!==lastGroup){ box.appendChild(el(`<div class="section-h"><h2>${GROUP[g]}</h2><div class="line"></div></div>`)); lastGroup=g; }
     }
     const dl = eventDeadline(e); const d = daysUntil(dl);
+    // 締切の表示は、これから動きが必要な大会（役員／未返答・受付前・返答済み）だけ
     let deadline='';
-    if(dl){
-      if(e.status==='open' && d!==null && d<0) deadline=`<span class="tag-alert">申込締切すぎ</span>`;
+    if(dl && (canEdit || e.__t.order<3)){
+      const isTodo = (!canEdit && e.__t.order===0); // 会員の未返答（申込みが必要）は赤字＋残日数
+      if(isTodo){
+        if(d!==null && d<0) deadline=`<span style="color:var(--s-alert);font-weight:700">申込締切 ${fmtDate(dl)}（締切すぎ）</span>`;
+        else if(d!==null) deadline=`<span style="color:var(--s-alert);font-weight:700">申込締切 ${fmtDate(dl)}（あと${d}日）</span>`;
+        else deadline=`<span style="color:var(--s-alert);font-weight:700">申込締切 ${fmtDate(dl)}</span>`;
+      }
+      else if(e.status==='open' && d!==null && d<0) deadline=`<span class="tag-alert">申込締切すぎ</span>`;
       else if(e.status==='open' && d!==null && d<=3) deadline=`<span class="tag-warn">🟠 締切あと${d}日</span>`;
       else deadline=`<span style="color:var(--muted)">申込締切 ${fmtDate(dl)}</span>`;
     }
     const typeMark = e.type==='road' ? '🛣️' : (e.type==='ekiden' ? '🎽' : '🏟️');
     const badge = canEdit ? `<span class="badge ${statusBadgeClass(e.status)}">${EVENT_STATUS[e.status]}</span>` : e.__t.badge;
-    const dim = (!canEdit && e.__t.order>=2) ? 'opacity:.72;' : '';
+    const dim = (!canEdit && e.__t.order>=3) ? 'opacity:.72;' : '';
+    const sub = `${yearOf(e.date)} ・ ${esc(v?v.name:'会場未設定')}${deadline?'<br>'+deadline:''}`;
     const r = el(`<div class="row" style="${dim}">
-      <div class="main"><b>${typeMark} ${esc(e.name)}</b>
-        <small>${fmtDate(e.date)} ・ ${esc(v?v.name:'会場未設定')}<br>${deadline}</small></div>
+      <div class="main"><b>${fmtMD(e.date)}　${typeMark} ${esc(e.name)}</b>
+        <small>${sub}</small></div>
       ${badge}
       <span class="chev">›</span>
     </div>`);
@@ -1557,17 +1656,29 @@ function EventsScreen(){
 }
 
 // 一般会員から見た大会の状態（並び替え用の order と 表示バッジ）
+// order 0=未返答 / 1=受付前 / 2=返答済み / 3=終了・対象外（時系列で混在表示）
 function memberEventTier(ev){
   const grades = eligibleGrades(resolveRule(ev,'eligibility'));
   const mine = childrenOfGuardian(Session.user().guardianId).filter(c=>c.status==='active' && grades.includes(c.grade));
-  if(!mine.length) return { order:4, badge:'<span class="badge b-common soft">対象なし</span>' };
+  const ended = (ev.status==='closed' || ev.status==='done');
+  const endMark = ended ? ' <span class="badge b-common soft">申込み終了</span>' : '';
+  // 対象外（この家庭に対象学年の子がいない）→ 終了・対象外グループへ
+  if(!mine.length) return { order:3, badge:`<span class="badge b-common soft">学年が参加対象外</span>${endMark}` };
+  // 受付中：まだ返答がない子がいれば「未返答」、全員返答済みなら申込み済／不参加
   if(ev.status==='open'){
     const todo = mine.some(c=>childAnswerState(ev,c)==='notanswered');
-    if(todo) return { order:0, badge:'<span class="badge b-alert">要申込</span>' };
-    return { order:2, badge:'<span class="badge b-officer">回答済み</span>' };
+    if(todo) return { order:0, badge:'<span class="badge b-alert">未返答</span>' };
+    const join = mine.some(c=>childAnswerState(ev,c)==='participate');
+    return { order:2, badge: join ? '<span class="badge b-officer">申込み済</span>' : '<span class="badge b-common soft">不参加</span>' };
   }
   if(ev.status==='preopen') return { order:1, badge:'<span class="badge b-warn">受付前</span>' };
-  return { order:3, badge:'<span class="badge b-common soft">申込み終了</span>' }; // closed / done
+  // 終了（締切・開催済み）→ 申込み内容のマーク＋「申込み終了」
+  const join = mine.some(c=>childAnswerState(ev,c)==='participate');
+  const decline = mine.some(c=>childAnswerState(ev,c)==='decline');
+  const st = join ? '<span class="badge b-officer">申込み済</span>'
+            : decline ? '<span class="badge b-common soft">不参加</span>'
+            : '<span class="badge b-common soft">申込みなし</span>';
+  return { order:3, badge:`${st}${endMark}` };
 }
 
 function ruleLine(ev,key){
@@ -1797,9 +1908,11 @@ function EventDetailScreen(){
     box.appendChild(el(`<div class="card"><div class="meta" style="border-top:0;padding-top:0">
       <span>記入者：<b>${esc(userName(e.enteredBy))}</b></span>
       <span>最終更新：<b>${fmtDateTime(e.updatedAt)}</b></span></div></div>`));
-    const edit = el(`<button class="btn btn-officer big">✏️ この大会を編集</button>`);
-    edit.onclick = ()=>go('eventEdit',{id:e.id});
-    box.appendChild(edit);
+    // 右下に常に表示される編集ボタン（スクロールしても付いてくる）
+    const fab = el(`<button class="btn btn-officer" style="position:fixed;right:16px;bottom:16px;z-index:60;width:auto;border-radius:999px;padding:12px 20px;box-shadow:0 4px 16px rgba(0,0,0,.28)">✏️ この大会を編集</button>`);
+    fab.onclick = ()=>go('eventEdit',{id:e.id});
+    box.appendChild(fab);
+    box.appendChild(el(`<div style="height:64px"></div>`)); // FABに隠れないための余白
   }else{
     box.appendChild(el(`<div class="meta"><span>最終更新：<b>${fmtDateTime(e.updatedAt)}</b></span></div>`));
   }
