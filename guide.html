@@ -89,6 +89,16 @@
   .copied{color:var(--green); font-weight:700; font-size:13px; margin-top:8px; text-align:center; min-height:18px;}
   .fbhint{font-size:12.5px; color:var(--muted); margin-top:8px; line-height:1.6;}
 
+  /* FAQ */
+  .faq{margin-top:4px;}
+  .faqi{padding:12px 0; border-top:1px solid var(--line2);}
+  .faqi:first-child{border-top:0;}
+  .faqi .fq{font-weight:800; font-size:14.5px; margin-bottom:5px; line-height:1.55;}
+  .faqi .fq::before{content:"Q. "; color:var(--blue);}
+  .faqi .fa{font-size:14px; color:var(--muted); line-height:1.72;}
+  .faqi .fa::before{content:"A. "; color:var(--green); font-weight:800;}
+  .faqi .fa b{color:var(--ink);}
+
   @media print{
     :root{--soft:#fff; --card:#fff;}
     body{background:#fff;}
@@ -224,6 +234,48 @@
         <li><b>外部からの大量アクセス・不正利用を防ぐ様々な仕組み</b>（ログイン必須＝Google認証、管理者が事前承認した会員のメールのみログイン可能、攻撃・ボットのブロック 等）。</li>
         <li>※このクラブの規模（数十家庭・写真／PDFも年数十枚）なら、多くの場合<b>無料の範囲内</b>で運用できる見込みです（利用が大きく増えた場合のみ費用が発生）。</li>
       </ul>
+    </div>
+  </div>
+
+  <div class="step" style="--tone:var(--blue)">
+    <div class="step-h"><span class="num" style="background:var(--blue)">❓</span><h2>本番版の使い方 FAQ</h2></div>
+    <div class="faq">
+      <div class="faqi">
+        <div class="fq">アプリを更新（バージョンアップ）すると、データは消えますか？</div>
+        <div class="fa"><b>消えません。</b>本番版はデータを<b>サーバーに保存</b>するため、更新は機能や見た目の改善だけで、名簿・記録・申込などは残ります。（今の試作版だけ、更新時にリセットされます。）</div>
+      </div>
+      <div class="faqi">
+        <div class="fq">入力した内容は、ほかの役員・保護者と共有されますか？</div>
+        <div class="fa"><b>はい。</b>全員が<b>同じ最新のデータ</b>を見られます（権限に応じた範囲で）。スマホ・PCなど端末を変えても、ログインすれば同じ内容が表示されます。</div>
+      </div>
+      <div class="faqi">
+        <div class="fq">間違えて消したり変えたりしたら、元に戻せますか？</div>
+        <div class="fa">戻せます。削除は<b>アーカイブ（非表示）</b>なので復活でき、サーバーの<b>自動バックアップ・巻き戻し</b>や、手動の<b>一括バックアップ</b>からも復元できます。「誰がいつ変えたか」も記録されます。</div>
+      </div>
+      <div class="faqi">
+        <div class="fq">不具合（バグ）が出たら、どうすればいいですか？</div>
+        <div class="fa">画面の<b>写真</b>と「<b>どの操作で起きたか</b>」を、LINEや報告フォームで担当へ送ってください。修正版を配布します。深刻なときは、いったん<b>前の正常な版に戻して</b>から直します。</div>
+      </div>
+      <div class="faqi">
+        <div class="fq">不具合を直せるのは、特定の人だけですか？</div>
+        <div class="fa">まず、<b>大会の追加・締切変更・名簿・文章・ルールなど"内容の変更"は、アプリの中で役員が操作するだけ</b>で、プログラムの修正は要りません（ここは誰でもできます）。一方、<b>バグ直しや新機能などプログラム自体の修正</b>には、正直なところ<b>AIコーディングツール（Claude Code 等／多くは月額プラン）を使える人</b>が必要で、"誰でもすぐ"とはいきません。とはいえ専門のプログラマーである必要はなく、<b>①ツールを使える担当を1人決める ②必要なときだけ外部に依頼</b>で回せます。アプリは<b>1つのファイル＋GitHub共有</b>なので、<b>担当が変わっても引き継げます</b>（一人に固定されません）。</div>
+      </div>
+      <div class="faqi">
+        <div class="fq">ログインは誰でもできますか？</div>
+        <div class="fa"><b>Googleログインが必須</b>で、<b>管理者が承認した会員のメール</b>だけが入れます。部外者はログインできず、中身も見られません。</div>
+      </div>
+      <div class="faqi">
+        <div class="fq">外部から大量アクセスや不正利用をされませんか？</div>
+        <div class="fa">ログイン必須に加え、<b>サーバー側のルール</b>で承認済み会員以外の読み書きを遮断し、<b>攻撃・ボットのブロック</b>も行います。URLが知られても中身は守られます。</div>
+      </div>
+      <div class="faqi">
+        <div class="fq">費用はかかりますか？</div>
+        <div class="fa">このクラブの規模なら、<b>多くの場合サーバーは無料の範囲内</b>で運用できる見込みです。利用が大きく増えた場合のみ、従量課金（小額〜）になります。</div>
+      </div>
+      <div class="faqi">
+        <div class="fq">スマホでもパソコンでも使えますか？</div>
+        <div class="fa"><b>どちらでも使えます。</b>保護者はスマホ中心、役員はPCでの一覧・印刷も便利です。</div>
+      </div>
     </div>
   </div>
 
