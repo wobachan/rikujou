@@ -232,7 +232,7 @@ const uid = (p) => p + '_' + Math.random().toString(36).slice(2,8);
    role_assignments / club_settings ...
    ============================================================= */
 const CURRENT_YEAR = 2026;
-const APP_VERSION = '2026-08-16 20:40 作成'; // アップロード後の確認用（この日時が変わると最新データに自動更新）
+const APP_VERSION = '2026-08-16 21:40 作成'; // アップロード後の確認用（この日時が変わると最新データに自動更新）
 
 function seedDB(){
   return {
@@ -765,9 +765,9 @@ function render(){
     events:'大会', eventDetail:'大会ページ', eventEdit:'大会の登録・編集', eventImport:'大会の一括取り込み',
     apply:'参加申し込み', responses:'回答状況',
     payments:'支払い管理', relay:'リレー編成', submission:'申込完了の記録', lineText:'LINE文面',
-    recordEntry:'記録入力', records:'記録・自己ベスト', a4records:'A4自己ベスト一覧', docsCleanup:'古い資料の整理',
+    recordEntry:'記録入力', records:'記録・自己ベスト', a4records:'A4自己ベスト一覧', recordsByEvent:'大会別の記録一覧', docsCleanup:'古い資料の整理',
     content:'クラブ情報', contentDetail:'詳細', contentEdit:'編集', search:'検索', yearUpdate:'年度更新',
-    venues:'会場情報', venueDetail:'会場の詳細', venueEdit:'会場の登録・編集',
+    venues:'会場情報', venueDetail:'会場の詳細', venueEdit:'会場の登録・編集', backup:'一括バックアップ・復元',
   };
   let barTitle = titles[route.name]||'レッツ！アプリ';
   if(route.name==='content' && SECTIONS[route.params.section]) barTitle=SECTIONS[route.params.section].label;
@@ -794,9 +794,9 @@ function render(){
     events:EventsScreen, eventDetail:EventDetailScreen, eventEdit:EventEditScreen, eventImport:EventImportScreen,
     apply:ApplyScreen, responses:ResponsesScreen,
     payments:PaymentsScreen, relay:RelayScreen, submission:SubmissionScreen, lineText:LineTextScreen,
-    recordEntry:RecordEntryScreen, records:RecordsListScreen, a4records:A4RecordsScreen, docsCleanup:DocsCleanupScreen,
+    recordEntry:RecordEntryScreen, records:RecordsListScreen, a4records:A4RecordsScreen, recordsByEvent:EventRecordsScreen, docsCleanup:DocsCleanupScreen,
     content:ContentListScreen, contentDetail:ContentDetailScreen, contentEdit:ContentEditScreen, search:SearchScreen, yearUpdate:YearUpdateScreen,
-    venues:VenuesScreen, venueDetail:VenueDetailScreen, venueEdit:VenueEditScreen,
+    venues:VenuesScreen, venueDetail:VenueDetailScreen, venueEdit:VenueEditScreen, backup:BackupScreen,
   };
   page.appendChild((R[route.name]||HomeScreen)());
 }
@@ -923,7 +923,8 @@ function HomeScreen(){
     const g2 = el('<div class="menu-grid"></div>');
     [['👥','会員名簿','児童・保護者','children'],
      ['🏆','大会運営','回答・支払い・リレー・LINE','events'],
-     ['📝','未回答・締切','各大会で確認','events']].forEach(([ico,lbl,desc,to])=>{
+     ['📝','未回答・締切','各大会で確認','events'],
+     ['💾','一括バックアップ・復元','全データを保存／戻す','backup']].forEach(([ico,lbl,desc,to])=>{
       const b = el(`<button class="menu-btn ${to==='soon'?'soon':''}">
         <span class="ico">${ico}</span><span class="lbl">${esc(lbl)}</span>
         <span class="desc">${esc(desc)}${to==='soon'?'・準備中':''}</span></button>`);
@@ -2911,7 +2912,13 @@ function RecordsListScreen(){
   const kids = canAll ? DB.children.slice().sort((a,b)=>b.grade-a.grade||a.kana.localeCompare(b.kana,'ja')) : childrenOfGuardian(Session.user().guardianId);
   box.appendChild(el(`<div class="card ${canAll?'edge-officer':'edge-member'}"><h2>📈 記録・自己ベスト</h2>
     <p class="sub">${canAll?'クラブ全員の記録':'お子さんの記録'}　／　<span style="color:var(--s-alert);font-weight:700">赤＝自己ベスト ⭐</span></p></div>`));
-  if(canAll){ const a4=el(`<button class="btn btn-officer">📄 A4自己ベスト一覧を印刷／PDF</button>`); a4.onclick=()=>go('a4records'); box.appendChild(a4); }
+  if(canAll){
+    const nav=el(`<div class="card"><div class="btn-row"></div></div>`); const nr=nav.querySelector('.btn-row');
+    const be=el(`<button class="btn btn-officer">🏟️ 大会別の記録一覧</button>`); be.onclick=()=>go('recordsByEvent'); nr.appendChild(be);
+    const a4=el(`<button class="btn">📄 全選手・自己ベスト一覧（A4印刷）</button>`); a4.onclick=()=>go('a4records'); nr.appendChild(a4);
+    box.appendChild(nav);
+    box.appendChild(el(`<div class="section-h" style="margin-top:2px"><h2>👤 個人別の記録（種目ごと・時系列）</h2><div class="line"></div></div>`));
+  }
   if(!canAll) box.appendChild(el(`<div class="note note-info">🔵 自分のお子さんの記録のみ表示されます。</div>`));
   const shown=kids.filter(c=>DB.records.some(r=>r.childId===c.id));
   if(!shown.length){ box.appendChild(el(`<div class="note note-info">まだ記録がありません。大会後に役員が入力します。</div>`)); return box; }
@@ -2927,6 +2934,33 @@ function RecordsListScreen(){
         const rankStr = (r.mark && r.rank!=null) ? ` ・ ${r.rank}位` : '';
         card.appendChild(el(`<div class="row" style="cursor:default;margin-top:6px"><div class="main"><b style="${pb?'color:var(--s-alert)':''}">${big}${(pb&&r.mark)?' ⭐':''}</b><small>${esc(r.eventName||'')} ・ ${fmtDate(r.date)} ・ ${r.grade}年${rankStr}</small></div></div>`));
       });
+    });
+    box.appendChild(card);
+  });
+  return box;
+}
+
+/* 大会別 全参加者記録一覧（②） */
+function EventRecordsScreen(){
+  const box=el('<div class="stack"></div>');
+  if(!Session.can('officer')){ box.appendChild(el(`<div class="note note-warn">大会別の記録一覧は役員以上が見られます。</div>`)); return box; }
+  box.appendChild(el(`<div class="card edge-officer"><h2>🏟️ 大会別の記録一覧（全参加者）</h2>
+    <p class="sub">大会ごとに、参加者全員の記録をまとめて表示します。<span style="color:var(--s-alert);font-weight:700">赤＝自己ベスト ⭐</span></p></div>`));
+  // 記録を大会ごとにまとめる（eventId優先、無ければ大会名で）
+  const groups={};
+  DB.records.forEach(r=>{ const key=r.eventId||('nm:'+(r.eventName||'その他')); if(!groups[key]) groups[key]={name:r.eventName||'（大会名なし）', date:r.date||'', recs:[]}; groups[key].recs.push(r); if(r.date && (!groups[key].date || r.date<groups[key].date)) groups[key].date=r.date; });
+  const list=Object.values(groups).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(!list.length){ box.appendChild(el(`<div class="note note-info">まだ記録がありません。大会後に役員が入力します。</div>`)); return box; }
+  list.forEach(g=>{
+    const card=el(`<div class="card"><h3>${esc(g.name)}　<small style="color:var(--muted)">${g.date?fmtDate(g.date):''} ・ ${g.recs.length}件</small></h3></div>`);
+    // 種目ごと、タイムの速い順
+    const recs=g.recs.slice().sort((a,b)=> (a.item||'').localeCompare(b.item||'','ja') || ((parseMark(a.mark)==null?1e9:parseMark(a.mark))-(parseMark(b.mark)==null?1e9:parseMark(b.mark))));
+    let lastItem=null;
+    recs.forEach(r=>{
+      if(r.item!==lastItem){ card.appendChild(el(`<div class="section-h" style="margin:10px 0 4px"><h2>${esc(r.item||'')}</h2><div class="line"></div></div>`)); lastItem=r.item; }
+      const c=getChild(r.childId); const pb=isPB(r);
+      const rankStr=(r.rank!=null)?`　${r.rank}位`:'';
+      card.appendChild(el(`<div class="row" style="cursor:default;margin-top:4px"><div class="main"><b>${esc(c?nameNo(c):'—')}</b><small>${c?c.grade+'年':''}</small></div><b style="${pb?'color:var(--s-alert)':''};white-space:nowrap">${r.mark?esc(r.mark):'—'}${(pb&&r.mark)?' ⭐':''}${rankStr}</b></div>`));
     });
     box.appendChild(card);
   });
@@ -3103,6 +3137,32 @@ function SearchScreen(){
    ============================================================= */
 function downloadBackup(){ downloadFile(`clubhouse_backup_${DB.year}.json`, JSON.stringify(DB), 'application/json'); }
 
+// バックアップ・復元・初期化のカード（役員メニューと年度更新の両方で使う）
+function backupCard(title){
+  const c=el(`<div class="card"><h3>💾 ${esc(title||'データのバックアップ・復元')}</h3>
+    <p class="sub">今の全データを1つのファイルに保存できます。あとで「復元」で元に戻せます。</p></div>`);
+  const bk=el(`<button class="btn btn-officer">💾 バックアップを書き出し（JSON）</button>`); bk.onclick=downloadBackup; c.appendChild(bk);
+  const rs=el(`<label class="btn" style="cursor:pointer;display:inline-flex;margin-top:8px">↩ バックアップから復元<input type="file" accept="application/json,.json" style="display:none"></label>`);
+  rs.querySelector('input').onchange=(ev)=>{ const f=ev.target.files[0]; ev.target.value=''; if(!f) return;
+    if(!confirm('現在のデータを、選んだバックアップで上書きします。よろしいですか？')) return;
+    const r=new FileReader(); r.onload=()=>{ try{ const d=JSON.parse(r.result); if(!d||!Array.isArray(d.children)) throw new Error('形式が違います'); DB=migrate(d); DB.__ver=APP_VERSION; if(!trySave()){ alert('保存容量を超えました。'); return; } route={name:'home',params:{}}; render(); alert('復元しました。'); }catch(e){ alert('復元に失敗しました：'+(e.message||e)); } }; r.readAsText(f); };
+  c.appendChild(rs);
+  const rst=el(`<button class="btn btn-danger" style="margin-top:8px;display:block">🧪 サンプルデータに初期化（お試し用）</button>`);
+  rst.onclick=()=>{ if(confirm('この端末のデータをすべて消して、最初のサンプルデータに戻します。（お試し用）よろしいですか？')){ resetDB(); Session.previewRole=null; route={name:'home',params:{}}; render(); alert('サンプルデータに初期化しました。'); } };
+  c.appendChild(rst);
+  return c;
+}
+
+function BackupScreen(){
+  const box=el('<div class="stack"></div>');
+  if(!Session.can('officer')){ box.appendChild(el(`<div class="note note-warn">バックアップ・復元は役員以上が使えます。</div>`)); return box; }
+  box.appendChild(el(`<div class="card edge-officer"><h2>💾 一括バックアップ・復元</h2>
+    <p class="sub">全データ（名簿・大会・申込・記録・設定など）を、1つのファイルに保存／復元します。</p></div>`));
+  box.appendChild(el(`<div class="note note-warn" style="font-size:13px">試作版は<b>版を更新すると、その端末のデータがリセット</b>されます。残したい入力があるときは、<b>更新前にバックアップを書き出し</b>ておけば、あとで「復元」で戻せます。書き出したファイルはご自身で保管してください（他の人とは共有されません）。</div>`));
+  box.appendChild(backupCard('データのバックアップ・復元'));
+  return box;
+}
+
 function YearUpdateScreen(){
   const box=el('<div class="stack"></div>');
   if(!Session.can('admin')){ box.appendChild(el(`<div class="note note-warn">年度更新は管理者のみ可能です。</div>`)); return box; }
@@ -3115,19 +3175,8 @@ function YearUpdateScreen(){
     <b>そのまま引き継ぐ（消えません）：</b>過去の記録・自己ベスト、過去の大会、会場情報、陸上ルール／安全／知恵袋／トレーニング図鑑、規約、デフォルト設定、保護者情報。<br>
     <b>更新する：</b>児童の学年（＋1）、6年生→卒団。</div>`));
 
-  // バックアップ（安全策）
-  const backup=el(`<div class="card"><h3>💾 実行前のバックアップ（推奨）</h3>
-    <p class="sub">万一に備え、今のデータをファイルに書き出せます。あとで「復元」で元に戻せます。</p></div>`);
-  const bk=el(`<button class="btn btn-officer">💾 バックアップを書き出し（JSON）</button>`); bk.onclick=downloadBackup; backup.appendChild(bk);
-  const rs=el(`<label class="btn" style="cursor:pointer;display:inline-flex;margin-top:8px">↩ バックアップから復元<input type="file" accept="application/json,.json" style="display:none"></label>`);
-  rs.querySelector('input').onchange=(ev)=>{ const f=ev.target.files[0]; ev.target.value=''; if(!f) return;
-    if(!confirm('現在のデータを、選んだバックアップで上書きします。よろしいですか？')) return;
-    const r=new FileReader(); r.onload=()=>{ try{ const d=JSON.parse(r.result); if(!d||!Array.isArray(d.children)) throw new Error('形式が違います'); DB=migrate(d); if(!trySave()){ alert('保存容量を超えました。'); return; } route={name:'home',params:{}}; render(); alert('復元しました。'); }catch(e){ alert('復元に失敗しました：'+(e.message||e)); } }; r.readAsText(f); };
-  backup.appendChild(rs);
-  const rst=el(`<button class="btn btn-danger" style="margin-top:8px;display:block">🧪 サンプルデータに初期化（お試し用）</button>`);
-  rst.onclick=()=>{ if(confirm('この端末のデータをすべて消して、最初のサンプルデータに戻します。（お試し用）よろしいですか？')){ resetDB(); Session.previewRole=null; route={name:'home',params:{}}; render(); alert('サンプルデータに初期化しました。'); } };
-  backup.appendChild(rst);
-  box.appendChild(backup);
+  // バックアップ（安全策）— 役員メニューと共通のカードを再利用
+  box.appendChild(backupCard('実行前のバックアップ（推奨）'));
 
   // プレビュー
   const targets=DB.children.filter(c=>c.status==='active'||c.status==='pause');
