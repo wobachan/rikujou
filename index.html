@@ -182,6 +182,17 @@
   table.a4 td .t{font-weight:700; font-size:16px;}
   table.a4 td .m{font-size:11px; color:#555;}
   table.a4 td.name{text-align:left; white-space:nowrap;}
+  /* 記録マトリクス表 */
+  .rtwrap{overflow-x:auto; -webkit-overflow-scrolling:touch; margin-top:8px;}
+  table.rtable{border-collapse:collapse; font-size:12.5px;}
+  table.rtable th, table.rtable td{border:1px solid var(--line); padding:6px 9px; white-space:nowrap; text-align:center;}
+  table.rtable thead th{background:var(--soft); font-size:12px;}
+  table.rtable th.n, table.rtable td.n{text-align:left; position:sticky; left:0; background:var(--card); z-index:1;}
+  table.rtable thead th.n{background:var(--soft); z-index:2;}
+  table.rtable td.evn{white-space:normal; max-width:150px; font-size:11.5px; line-height:1.35;}
+  table.rtable td.pb{color:var(--s-alert); font-weight:700;}
+  table.rtable td.empty{color:var(--line);}
+  table.rtable td.other{text-align:left; white-space:normal; max-width:180px; font-size:11.5px; color:var(--muted);}
   @media print{
     .appbar, .userbar, .no-print{display:none !important;}
     body{background:#fff;}
@@ -189,6 +200,10 @@
     .card{box-shadow:none !important; border:none !important; padding:0 !important;}
     #a4print{display:block !important;}
     table.a4{font-size:11px;} table.a4 td .t{font-size:14px;}
+    .rtwrap{overflow:visible !important;}
+    table.rtable{font-size:10.5px;} table.rtable th, table.rtable td{padding:3px 5px;}
+    table.rtable thead th{background:#eee !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    table.rtable td.pb{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
     @page{size:A4 landscape; margin:10mm;}
   }
 </style>
@@ -232,21 +247,18 @@ const uid = (p) => p + '_' + Math.random().toString(36).slice(2,8);
    role_assignments / club_settings ...
    ============================================================= */
 const CURRENT_YEAR = 2026;
-const APP_VERSION = '2026-08-16 21:40 作成'; // アップロード後の確認用（この日時が変わると最新データに自動更新）
+const APP_VERSION = '2026-08-17 14:20 作成'; // アップロード後の確認用（この日時が変わると最新データに自動更新）
 
 function seedDB(){
   return {
     year: CURRENT_YEAR,
     // ---- ユーザー（＝ログインする人。保護者/役員/管理者） ----
     users: [
-      { id:'u_ichiro', name:'アニマル浜口', kana:'あにまる はまぐち', email:'ichiro@example.com', role:'member',  guardianId:'g_ichiro', status:'active' },
       { id:'u_tsato',  name:'梅宮 辰夫', kana:'うめみや たつお',   email:'tsato@example.com',  role:'admin',   guardianId:'g_tsato',  status:'active' },
       { id:'u_tanakah',name:'小泉 純一郎', kana:'こいずみ じゅんいちろう',   email:'tanakah@example.com',role:'officer', guardianId:'g_tanakah',status:'active', staffRole:'事務局（大会申込み）' },
       { id:'u_taka',   name:'長嶋 茂雄', kana:'ながしま しげお', email:'taka@example.com',   role:'officer', guardianId:'g_taka',   status:'active', staffRole:'会長' },
-      { id:'u_ito',    name:'渡辺 謙',   kana:'わたなべ けん',     email:'ito@example.com',    role:'officer', guardianId:'g_ito',    status:'active', staffRole:'会計役' },
-      { id:'u_suzuki', name:'浜田 雅功', kana:'はまだ まさとし',     email:'suzuki@example.com', role:'member',  guardianId:'g_suzuki', status:'active' },
-      { id:'u_koba2',  name:'工藤 静香', kana:'くどう しずか',       email:'shizuka@example.com', role:'member', guardianId:'g_koba2', status:'active' },
-      { id:'u_suzuki2',name:'小川 菜摘', kana:'おがわ なつみ',       email:'natsumi@example.com', role:'member', guardianId:'g_suzuki2', status:'active' },
+      { id:'u_suzuki2',name:'小川 菜摘', kana:'おがわ なつみ',   email:'natsumi@example.com', role:'officer', guardianId:'g_suzuki2', status:'active', staffRole:'会計役' },
+      { id:'u_koba2',  name:'工藤 静香', kana:'くどう しずか',   email:'shizuka@example.com', role:'member',  guardianId:'g_koba2', status:'active' },
       // 子どもがいない監督（コーチ）。保護者ではないが管理者。guardianId は null
       { id:'u_coach',  name:'松岡 修造', kana:'まつおか しゅうぞう', email:'coach@example.com', role:'admin',   guardianId:null, status:'active', staffRole:'監督' },
     ],
@@ -767,7 +779,7 @@ function render(){
     payments:'支払い管理', relay:'リレー編成', submission:'申込完了の記録', lineText:'LINE文面',
     recordEntry:'記録入力', records:'記録・自己ベスト', a4records:'A4自己ベスト一覧', recordsByEvent:'大会別の記録一覧', docsCleanup:'古い資料の整理',
     content:'クラブ情報', contentDetail:'詳細', contentEdit:'編集', search:'検索', yearUpdate:'年度更新',
-    venues:'会場情報', venueDetail:'会場の詳細', venueEdit:'会場の登録・編集', backup:'一括バックアップ・復元',
+    venues:'会場情報', venueDetail:'会場の詳細', venueEdit:'会場の登録・編集', backup:'一括バックアップ・復元', permissions:'機能・権限一覧',
   };
   let barTitle = titles[route.name]||'レッツ！アプリ';
   if(route.name==='content' && SECTIONS[route.params.section]) barTitle=SECTIONS[route.params.section].label;
@@ -796,7 +808,7 @@ function render(){
     payments:PaymentsScreen, relay:RelayScreen, submission:SubmissionScreen, lineText:LineTextScreen,
     recordEntry:RecordEntryScreen, records:RecordsListScreen, a4records:A4RecordsScreen, recordsByEvent:EventRecordsScreen, docsCleanup:DocsCleanupScreen,
     content:ContentListScreen, contentDetail:ContentDetailScreen, contentEdit:ContentEditScreen, search:SearchScreen, yearUpdate:YearUpdateScreen,
-    venues:VenuesScreen, venueDetail:VenueDetailScreen, venueEdit:VenueEditScreen, backup:BackupScreen,
+    venues:VenuesScreen, venueDetail:VenueDetailScreen, venueEdit:VenueEditScreen, backup:BackupScreen, permissions:PermissionsScreen,
   };
   page.appendChild((R[route.name]||HomeScreen)());
 }
@@ -881,7 +893,6 @@ function HomeScreen(){
 
   // 会員共通メニュー（黒＝共通）
   const commonMenu = [
-    ['🔍','検索','大会・会場・情報を探す','search'],
     ['📅','大会','日程・要項・申込み','events'],
     ['📈','記録・自己ベスト','タイム履歴','records'],
     ['🗺️','会場情報','地図・集合場所','venues'],
@@ -890,6 +901,8 @@ function HomeScreen(){
     ['🛡️','安全・安心','熱中症・けが予防','content','safety'],
     ['💡','クラブの知恵袋','監督・保護者の工夫','content','knowledge'],
     ['📜','クラブ規約','最新版','content','docs'],
+    ['📋','機能・権限一覧','会員・役員・管理者','permissions'],
+    ['🔍','検索','大会・会場・情報を探す','search'],
   ];
 
   if(eff==='member'){
@@ -1523,8 +1536,10 @@ function entryFormRows(ev){
     .forEach(({p,child})=>{
       const evs=(p.events||[]); const e1=evs[0], e2=evs[1];
       const relayOn = relayOffered(ev) && p.relay && p.relay!=='no';
+      const sur = String(child.name||'').split(/\s+/)[0];
+      const surKana = toKatakana(String(child.kana||'').split(/\s+/)[0]);
       rows.push([
-        child.regNo||'', child.name, toKatakana(child.kana), child.grade, club,
+        child.regNo||'', sur, surKana, child.grade, club,
         e1?entryEventLabel(child,e1):'', e1?fmtRefMark(bestMark(child.id,e1)||''):'',
         e2?entryEventLabel(child,e2):'', e2?fmtRefMark(bestMark(child.id,e2)||''):'',
         relayOn?'リレー':'', ''
@@ -1692,11 +1707,16 @@ function ruleLine(ev,key){
   </div>`;
 }
 
-/* 大会要項・会場図（写真/PDF）カード — 役員は追加/削除、全員が閲覧 */
-function EventDocsCard(e, canEdit){
-  const card=el(`<div class="card"><h3>📄 大会要項・会場図</h3><p class="sub">写真やPDFを${canEdit?'追加・':''}確認できます。</p></div>`);
+function linkLabel(u){ try{ const h=new URL(u).hostname.replace(/^www\./,''); return /drive\.google|docs\.google/.test(h)?'Googleドライブ':h; }catch(e){ return 'リンク'; } }
+
+/* 添付カード（写真・PDF・リンク）— 大会/会場/クラブ情報などで共通利用。役員は追加/削除、全員が閲覧。propで保存先配列を指定（既定 docs） */
+function AttachmentsCard(owner, canEdit, title, prop){
+  prop = prop || 'docs';
+  if(!owner[prop]) owner[prop]=[];
+  const arr = owner[prop];
+  const card=el(`<div class="card"><h3>📎 ${esc(title||'資料（写真・PDF・リンク）')}</h3><p class="sub">写真・PDF・リンク（Googleドライブ等）を${canEdit?'追加・':''}確認できます。</p></div>`);
   if(canEdit){
-    const pick=el(`<label class="btn btn-officer" style="cursor:pointer;display:inline-flex">📎 資料を追加（写真・PDF）
+    const pick=el(`<label class="btn btn-officer" style="cursor:pointer;display:inline-flex">📎 ファイルを追加（写真・PDF）
       <input type="file" accept="image/*,application/pdf" multiple style="display:none"></label>`);
     pick.querySelector('input').onchange=async (evt)=>{
       const files=[...evt.target.files]; evt.target.value='';
@@ -1706,33 +1726,52 @@ function EventDocsCard(e, canEdit){
           if(f.type.startsWith('image/')){ kind='image'; dataUrl=await fileToImageDataUrl(f); }
           else if(f.type==='application/pdf'){ kind='pdf'; if(f.size>4*1024*1024) alert(`「${f.name}」は容量が大きい（約${Math.round(f.size/1048576)}MB）ため、試作版では保存できないことがあります。`); dataUrl=await fileToDataUrl(f); }
           else { alert(`「${f.name}」は写真かPDFを選んでください。`); continue; }
-          e.docs.push({ id:uid('d'), name:f.name, kind, dataUrl, enteredBy:Session.userId, updatedAt:nowJST() });
-          if(!trySave()){ e.docs.pop(); alert('保存容量の上限を超えました。写真の枚数を減らすか、PDFは小さいものにしてください。（本番サーバー接続で解消します）'); break; }
+          arr.push({ id:uid('d'), name:f.name, kind, dataUrl, enteredBy:Session.userId, updatedAt:nowJST() });
+          if(!trySave()){ arr.pop(); alert('保存容量の上限を超えました。写真の枚数を減らすか、PDFは小さいものにしてください。（本番サーバー接続で解消します）'); break; }
         }catch(err){ alert('読み込みに失敗しました：'+(err&&err.message||err)); }
       }
       render();
     };
     card.appendChild(pick);
-    card.appendChild(el(`<div class="note note-warn" style="margin-top:8px;font-size:12px">⚠️ 試作版では、追加した資料は<b>この端末（ブラウザ）内だけ</b>に保存されます。他の役員・保護者の端末には表示されません。全員での共有は本番サーバー接続で対応します。</div>`));
+    // リンク（Googleドライブ等のURL）を追加
+    const linkRow=el(`<div style="display:flex;gap:6px;margin-top:8px"><input class="f" placeholder="🔗 Googleドライブ等のリンクを貼り付け" style="flex:1;margin:0"><button class="btn" style="white-space:nowrap">＋ リンク</button></div>`);
+    const urlInput=linkRow.querySelector('input');
+    linkRow.querySelector('button').onclick=()=>{ const u=(urlInput.value||'').trim(); if(!u) return; if(!/^https?:\/\//i.test(u)){ alert('http:// または https:// から始まるリンクを貼ってください。'); return; } arr.push({ id:uid('d'), name:linkLabel(u), kind:'link', url:u, enteredBy:Session.userId, updatedAt:nowJST() }); if(!trySave()){ arr.pop(); alert('保存できませんでした。'); return; } urlInput.value=''; render(); };
+    card.appendChild(linkRow);
+    card.appendChild(el(`<div class="note note-warn" style="margin-top:8px;font-size:12px">⚠️ 試作版では、ファイルは<b>この端末（ブラウザ）内だけ</b>に保存されます（リンクは共有できます）。全員での共有は本番サーバー接続で対応します。<br>※Googleドライブは、ドライブ側で「リンクを知っている全員が閲覧可」に設定してからリンクを貼ってください。本番では<b>ドライブから直接選ぶ機能</b>を追加します。</div>`));
   }
-  if(!e.docs || !e.docs.length){
-    card.appendChild(el(`<div class="note note-info" style="margin-top:8px">まだ資料がありません。${canEdit?'上のボタンから写真やPDFを追加できます（スマホは撮影も選べます）。':'役員が追加するとここに表示されます。'}</div>`));
+  if(!arr.length){
+    card.appendChild(el(`<div class="note note-info" style="margin-top:8px">まだ資料がありません。${canEdit?'上から写真・PDF・リンクを追加できます（スマホは撮影も選べます）。':'役員が追加するとここに表示されます。'}</div>`));
     return card;
   }
   const grid=el(`<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:10px"></div>`);
-  e.docs.forEach(d=>{
+  arr.forEach(d=>{
     const cell=el(`<div style="width:112px"></div>`);
     if(d.kind==='image'){
       cell.appendChild(el(`<a href="${d.dataUrl}" target="_blank" rel="noopener"><img src="${d.dataUrl}" alt="${esc(d.name)}" style="width:112px;height:112px;object-fit:cover;border-radius:10px;border:1px solid var(--line)"></a>`));
+    }else if(d.kind==='link' || d.url){
+      cell.appendChild(el(`<a href="${esc(d.url)}" target="_blank" rel="noopener" class="btn" style="width:112px;height:112px;display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;text-decoration:none"><span style="font-size:34px">🔗</span><span style="font-size:11px">リンクを開く</span></a>`));
     }else{
       cell.appendChild(el(`<a href="${d.dataUrl}" target="_blank" rel="noopener" class="btn" style="width:112px;height:112px;display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;text-decoration:none"><span style="font-size:34px">📄</span><span style="font-size:11px">PDFを開く</span></a>`));
     }
     cell.appendChild(el(`<div style="font-size:11px;color:var(--muted);word-break:break-all;margin-top:4px">${esc(d.name)}</div>`));
-    if(canEdit){ const del=el(`<button class="btn btn-danger" style="padding:4px 8px;font-size:12px;margin-top:4px;width:100%">削除</button>`); del.onclick=()=>{ if(confirm('この資料を削除しますか？')){ e.docs=e.docs.filter(x=>x!==d); save(); render(); } }; cell.appendChild(del); }
+    if(canEdit){ const del=el(`<button class="btn btn-danger" style="padding:4px 8px;font-size:12px;margin-top:4px;width:100%">削除</button>`); del.onclick=()=>{ if(confirm('この資料を削除しますか？')){ owner[prop]=owner[prop].filter(x=>x!==d); save(); render(); } }; cell.appendChild(del); }
     grid.appendChild(cell);
   });
   card.appendChild(grid);
   return card;
+}
+
+/* 大会要項・会場図（写真/PDF/リンク） */
+function EventDocsCard(e, canEdit){ return AttachmentsCard(e, canEdit, '大会要項・会場図（写真・PDF・リンク）'); }
+
+/* 編集画面に入れる添付セクション（役員の「編集」内で写真・PDF・リンクを追加/削除） */
+function editAttachments(owner, editing, title){
+  if(!editing){ return el(`<div class="note note-info" style="margin-top:8px">💡 まず「保存する」で登録してから、もう一度「編集」を開くと<b>写真・PDF・リンク</b>を追加できます。</div>`); }
+  const wrap=el('<div style="margin-top:8px"></div>');
+  wrap.appendChild(el(`<div class="note note-warn" style="font-size:12px">📎 写真・PDF・リンクの追加/削除は<b>その場ですぐ保存</b>されます。上の入力欄を変更したときは、<b>先に「保存する」</b>を押してから追加してください。</div>`));
+  wrap.appendChild(AttachmentsCard(owner, true, title));
+  return wrap;
 }
 
 function EventDetailScreen(){
@@ -1888,8 +1927,8 @@ function EventDetailScreen(){
     box.appendChild(MemberApplyCard(e));
   }
 
-  // 大会要項・会場図（写真/PDF）
-  box.appendChild(EventDocsCard(e, canEdit));
+  // 大会要項・会場図（写真/PDF/リンク）＝閲覧のみ。追加/削除は役員の「編集」内で。
+  if(e.docs && e.docs.length) box.appendChild(EventDocsCard(e, false));
 
   // 会場・集合・要項
   const info = el(`<div class="card"><h3>🗺️ 会場・当日情報</h3></div>`);
@@ -2092,6 +2131,7 @@ function EventEditScreen(){
     actions.appendChild(arch);
   }
   box.appendChild(actions);
+  box.appendChild(editAttachments(e, editing, '大会要項・会場図（写真・PDF・リンク）'));
   return box;
 }
 
@@ -2296,8 +2336,10 @@ function VenuesScreen(){
     <p class="sub">一度登録すれば各大会で再利用できます（${DB.venues.length}件）</p></div>`);
   if(canEdit){ const add=el(`<button class="btn btn-officer">＋ 会場を登録</button>`); add.onclick=()=>go('venueEdit',{id:null}); head.appendChild(add); }
   box.appendChild(head);
-  DB.venues.forEach(v=>{
-    const used = DB.events.filter(e=>e.venueId===v.id).length;
+  // 利用頻度（その会場の大会数）の多い順に並べる
+  const venuesByUse = DB.venues.map(v=>({v, used:DB.events.filter(e=>e.venueId===v.id).length}))
+    .sort((a,b)=> b.used-a.used || a.v.name.localeCompare(b.v.name,'ja'));
+  venuesByUse.forEach(({v,used})=>{
     const r = el(`<div class="row"><div class="main"><b>${esc(v.name)}</b><small>${esc(v.address||'—')}　/　利用大会 ${used}件</small></div><span class="chev">›</span></div>`);
     r.onclick=()=>go('venueDetail',{id:v.id});
     box.appendChild(r);
@@ -2317,6 +2359,9 @@ function VenueDetailScreen(){
   if(v.mapUrl) card.appendChild(el(`<a class="row" href="${esc(v.mapUrl)}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;margin-top:8px"><div class="main"><small>地図</small><b style="word-break:break-all;color:var(--c-member)">${esc(v.mapUrl)} ↗</b></div></a>`));
   if(v.note) card.appendChild(el(`<div class="note note-info" style="margin-top:8px">📝 ${esc(v.note)}</div>`));
   box.appendChild(card);
+
+  // 会場の写真・地図・資料（閲覧のみ。追加/削除は役員の「編集」内で）
+  if(v.docs && v.docs.length) box.appendChild(AttachmentsCard(v, false, '会場の写真・地図・資料'));
 
   // この会場を使う大会
   const evs = DB.events.filter(e=>e.venueId===v.id);
@@ -2355,6 +2400,7 @@ function VenueEditScreen(){
     save(); back();
   };
   box.appendChild(btn);
+  box.appendChild(editAttachments(v, editing, '会場の写真・地図・資料'));
   return box;
 }
 
@@ -2917,53 +2963,112 @@ function RecordsListScreen(){
     const be=el(`<button class="btn btn-officer">🏟️ 大会別の記録一覧</button>`); be.onclick=()=>go('recordsByEvent'); nr.appendChild(be);
     const a4=el(`<button class="btn">📄 全選手・自己ベスト一覧（A4印刷）</button>`); a4.onclick=()=>go('a4records'); nr.appendChild(a4);
     box.appendChild(nav);
-    box.appendChild(el(`<div class="section-h" style="margin-top:2px"><h2>👤 個人別の記録（種目ごと・時系列）</h2><div class="line"></div></div>`));
+    box.appendChild(el(`<div class="section-h" style="margin-top:2px"><h2>👤 個人別の記録（1行＝大会／各列＝種目・時系列）</h2><div class="line"></div></div>`));
   }
-  if(!canAll) box.appendChild(el(`<div class="note note-info">🔵 自分のお子さんの記録のみ表示されます。</div>`));
+  if(canAll){
+    const tools=el(`<div class="card no-print"><div class="btn-row"></div></div>`); const tr=tools.querySelector('.btn-row');
+    const pdf=el(`<button class="btn btn-officer">🖨 PDF（印刷）</button>`); pdf.onclick=()=>window.print(); tr.appendChild(pdf);
+    const xls=el(`<button class="btn">⬇ Excel（CSV）</button>`); tr.appendChild(xls);
+    box.appendChild(tools);
+    box._xls=xls; // 後でCSVをひも付け
+  }
+  if(!canAll) box.appendChild(el(`<div class="note note-info">🔵 自分のお子さんの記録のみ表示されます。1行＝大会（日付）、各列＝種目。</div>`));
   const shown=kids.filter(c=>DB.records.some(r=>r.childId===c.id));
   if(!shown.length){ box.appendChild(el(`<div class="note note-info">まだ記録がありません。大会後に役員が入力します。</div>`)); return box; }
+  const csv=[];
+  const COLS=FIXED_INDIV_COLS; // 100m,800m,1000m,リレー,200m,400m（全員そろえる）
   shown.forEach(c=>{
+    const crecs=DB.records.filter(r=>r.childId===c.id);
+    // 大会（開催）ごとにまとめる
+    const evs={};
+    crecs.forEach(r=>{ const key=r.eventId||('nm:'+(r.eventName||'')+(r.date||'')); if(!evs[key]) evs[key]={name:r.eventName||'（大会名なし）', date:r.date||'', recs:[]}; evs[key].recs.push(r); });
+    const evList=Object.values(evs).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
     const card=el(`<div class="card"><h3>${esc(nameNo(c))}　<small style="color:var(--muted)">${c.grade}年</small></h3></div>`);
-    const items=[...new Set(DB.records.filter(r=>r.childId===c.id).map(r=>r.item))];
-    items.forEach(item=>{
-      const recs=childItemRecords(c.id,item).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-      const bm=bestMark(c.id,item);
-      card.appendChild(el(`<div class="section-h" style="margin:10px 0 4px"><h2>${esc(item)}${bm?`　<span style="color:var(--s-alert)">自己ベスト ${esc(bm)}</span>`:''}</h2><div class="line"></div></div>`));
-      recs.forEach(r=>{ const pb=isPB(r);
-        const big = r.mark ? esc(r.mark) : (r.rank!=null? r.rank+'位' : '—');
-        const rankStr = (r.mark && r.rank!=null) ? ` ・ ${r.rank}位` : '';
-        card.appendChild(el(`<div class="row" style="cursor:default;margin-top:6px"><div class="main"><b style="${pb?'color:var(--s-alert)':''}">${big}${(pb&&r.mark)?' ⭐':''}</b><small>${esc(r.eventName||'')} ・ ${fmtDate(r.date)} ・ ${r.grade}年${rankStr}</small></div></div>`));
-      });
+    const wrap=el(`<div class="rtwrap"></div>`);
+    const t=el(`<table class="rtable"><thead><tr><th class="n">大会（日付）</th>${COLS.map(i=>`<th>${COL_LABEL[i]||esc(i)}</th>`).join('')}<th>その他<br><span style="font-weight:400;font-size:10px">走幅跳・ジャベリック等</span></th></tr></thead><tbody></tbody></table>`);
+    const tb=t.querySelector('tbody');
+    csv.push([`■ ${nameNo(c)}（${c.grade}年）`]);
+    csv.push(['大会','日付',...COLS.map(x=>COL_CSVLABEL[x]||x),'その他（自由記述）']);
+    evList.forEach(g=>{
+      let rowHtml=`<td class="n evn"><b>${eventNameHtml(g.name)}</b><br><span style="color:var(--muted)">${g.date?fmtMD(g.date):''}</span></td>`;
+      const csvRow=[g.name, g.date?fmtDateShort(g.date):''];
+      COLS.forEach(col=>{ const cell=markCell(colBestRec(g.recs,c.id,col)); rowHtml+=cell.html; csvRow.push(cell.csv); });
+      const other=otherItemsText(g.recs,c.id); rowHtml+=`<td class="other">${esc(other)}</td>`; csvRow.push(other);
+      tb.appendChild(el(`<tr>${rowHtml}</tr>`)); csv.push(csvRow);
     });
-    box.appendChild(card);
+    csv.push([]);
+    wrap.appendChild(t); card.appendChild(wrap); box.appendChild(card);
   });
+  if(box._xls) box._xls.onclick=()=>downloadFile(`個人別記録一覧_${DB.year}.csv`, rowsToCSV(csv), 'text/csv;charset=utf-8');
   return box;
 }
 
-/* 大会別 全参加者記録一覧（②） */
+/* 記録テーブル 共通ヘルパー */
+const REC_ITEM_ORDER=['100m','200m','400m','800m','1000m','1500m','80mH','走幅跳','走高跳','ジャベリックボール投げ','ボール投げ','コンバインドA','コンバインドB','4×100mR','リレー','1.5kmクロカン','クロスカントリー'];
+function recItemSort(a,b){ const ia=REC_ITEM_ORDER.indexOf(a), ib=REC_ITEM_ORDER.indexOf(b); return (ia<0?900:ia)-(ib<0?900:ib) || String(a).localeCompare(String(b),'ja'); }
+function bestRecIn(recs, childId, item){ const cand=recs.filter(r=>r.childId===childId&&r.item===item); if(!cand.length) return null; const timed=cand.filter(r=>parseMark(r.mark)!=null); if(!timed.length) return cand[0]; return timed.reduce((a,b)=>parseMark(b.mark)<parseMark(a.mark)?b:a); }
+function markCell(rec){ if(!rec) return {html:'<td class="empty">・</td>', csv:''}; const pb=isPB(rec); const txt=rec.mark?esc(rec.mark):(rec.rank!=null?rec.rank+'位':'—'); return {html:`<td class="${pb?'pb':''}">${txt}${(pb&&rec.mark)?' ⭐':''}</td>`, csv: rec.mark||(rec.rank!=null?rec.rank+'位':'')}; }
+// 個人別の固定列（全員そろえる）。リレーは同性リレー、クロカンは1500mクロスカントリー。走幅跳・ジャベリック等は「その他」へ。
+const FIXED_INDIV_COLS=['100m','800m','1000m','リレー','クロカン','200m','400m'];
+const COL_LABEL={'クロカン':'1500m<br><span style="font-weight:400;font-size:10px">クロカン</span>'};
+const COL_CSVLABEL={'クロカン':'1500m(クロカン)'};
+const RELAY_RE=/リレー|4×100|4x100|R$/i;
+const CROSS_RE=/クロ|1\.5\s*k|1500m/i;
+const STD_ITEMS=new Set(['100m','200m','400m','800m','1000m']);
+function pickBest(cand){ if(!cand.length) return null; const timed=cand.filter(r=>parseMark(r.mark)!=null); return timed.length?timed.reduce((a,b)=>parseMark(b.mark)<parseMark(a.mark)?b:a):cand[0]; }
+function colBestRec(recs, childId, col){
+  if(col==='リレー') return pickBest(recs.filter(r=>r.childId===childId && RELAY_RE.test(r.item||'')));
+  if(col==='クロカン') return pickBest(recs.filter(r=>r.childId===childId && CROSS_RE.test(r.item||'')));
+  return bestRecIn(recs, childId, col);
+}
+function otherItemsText(recs, childId){
+  return recs.filter(r=>r.childId===childId && !STD_ITEMS.has(r.item) && !RELAY_RE.test(r.item||'') && !CROSS_RE.test(r.item||''))
+    .map(r=>`${r.item} ${r.mark||(r.rank!=null?r.rank+'位':'')}`.trim()).join(' / ');
+}
+// 「第◯回」だけをとても小さく、本体はそのまま表示（HTMLを返す）
+function eventNameHtml(name){ const m=String(name||'').match(/^(第\s*[0-9０-９]+\s*回)\s*(.*)$/); return m ? `<span style="font-size:9px;color:var(--muted);font-weight:400">${esc(m[1])}</span> ${esc(m[2])}` : esc(name); }
+
+/* 大会別 全参加者記録一覧（②）— 1行＝選手／各列＝種目。駅伝等は結果写真をアップロード */
 function EventRecordsScreen(){
   const box=el('<div class="stack"></div>');
   if(!Session.can('officer')){ box.appendChild(el(`<div class="note note-warn">大会別の記録一覧は役員以上が見られます。</div>`)); return box; }
-  box.appendChild(el(`<div class="card edge-officer"><h2>🏟️ 大会別の記録一覧（全参加者）</h2>
-    <p class="sub">大会ごとに、参加者全員の記録をまとめて表示します。<span style="color:var(--s-alert);font-weight:700">赤＝自己ベスト ⭐</span></p></div>`));
-  // 記録を大会ごとにまとめる（eventId優先、無ければ大会名で）
-  const groups={};
-  DB.records.forEach(r=>{ const key=r.eventId||('nm:'+(r.eventName||'その他')); if(!groups[key]) groups[key]={name:r.eventName||'（大会名なし）', date:r.date||'', recs:[]}; groups[key].recs.push(r); if(r.date && (!groups[key].date || r.date<groups[key].date)) groups[key].date=r.date; });
-  const list=Object.values(groups).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  if(!list.length){ box.appendChild(el(`<div class="note note-info">まだ記録がありません。大会後に役員が入力します。</div>`)); return box; }
-  list.forEach(g=>{
-    const card=el(`<div class="card"><h3>${esc(g.name)}　<small style="color:var(--muted)">${g.date?fmtDate(g.date):''} ・ ${g.recs.length}件</small></h3></div>`);
-    // 種目ごと、タイムの速い順
-    const recs=g.recs.slice().sort((a,b)=> (a.item||'').localeCompare(b.item||'','ja') || ((parseMark(a.mark)==null?1e9:parseMark(a.mark))-(parseMark(b.mark)==null?1e9:parseMark(b.mark))));
-    let lastItem=null;
-    recs.forEach(r=>{
-      if(r.item!==lastItem){ card.appendChild(el(`<div class="section-h" style="margin:10px 0 4px"><h2>${esc(r.item||'')}</h2><div class="line"></div></div>`)); lastItem=r.item; }
-      const c=getChild(r.childId); const pb=isPB(r);
-      const rankStr=(r.rank!=null)?`　${r.rank}位`:'';
-      card.appendChild(el(`<div class="row" style="cursor:default;margin-top:4px"><div class="main"><b>${esc(c?nameNo(c):'—')}</b><small>${c?c.grade+'年':''}</small></div><b style="${pb?'color:var(--s-alert)':''};white-space:nowrap">${r.mark?esc(r.mark):'—'}${(pb&&r.mark)?' ⭐':''}${rankStr}</b></div>`));
-    });
+  const officer=Session.can('officer');
+  box.appendChild(el(`<div class="card edge-officer"><h2>🏟️ 大会別の記録一覧（表）</h2>
+    <p class="sub">1行＝選手、各列＝種目。<span style="color:var(--s-alert);font-weight:700">赤＝自己ベスト ⭐</span><br>駅伝など個人記録のない大会は、<b>結果一覧の写真・画像を役員がアップロード</b>して数年分を共有できます。</p></div>`));
+  // 記録を大会（eventId）ごとに集約。大会が特定できない記録は名前で集約
+  const recByEv={}, orphan={};
+  DB.records.forEach(r=>{ const ev=r.eventId&&getEvent(r.eventId); if(ev){ (recByEv[ev.id]=recByEv[ev.id]||[]).push(r); } else { const k='nm:'+(r.eventName||'その他')+(r.date||''); (orphan[k]=orphan[k]||{name:r.eventName||'（大会名なし）',date:r.date||'',recs:[]}).recs.push(r); } });
+  // 表示する大会：記録あり／駅伝／結果写真あり
+  const evs=DB.events.filter(e=> recByEv[e.id] || e.type==='ekiden' || (e.resultDocs&&e.resultDocs.length)).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const orphanList=Object.values(orphan).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(!evs.length && !orphanList.length){ box.appendChild(el(`<div class="note note-info">まだ記録がありません。大会後に役員が入力します。</div>`)); return box; }
+  const tools=el(`<div class="card no-print"><div class="btn-row"></div></div>`); const tr=tools.querySelector('.btn-row');
+  const pdf=el(`<button class="btn btn-officer">🖨 PDF（印刷）</button>`); pdf.onclick=()=>window.print(); tr.appendChild(pdf);
+  const xls=el(`<button class="btn">⬇ Excel（CSV）</button>`); tr.appendChild(xls);
+  box.appendChild(tools);
+  const csv=[];
+  const addMatrix=(card,name,date,recs)=>{
+    const ids=[...new Set(recs.map(r=>r.childId))];
+    const parts=ids.map(getChild).filter(Boolean).sort((a,b)=>b.grade-a.grade||a.kana.localeCompare(b.kana,'ja'));
+    const items=[...new Set(recs.map(r=>r.item))].sort(recItemSort);
+    const wrap=el(`<div class="rtwrap"></div>`);
+    const t=el(`<table class="rtable"><thead><tr><th class="n">氏名（学年）</th>${items.map(i=>`<th>${esc(i)}</th>`).join('')}</tr></thead><tbody></tbody></table>`);
+    const tb=t.querySelector('tbody');
+    csv.push([`■ ${name}（${date?fmtDateShort(date):''}）`]); csv.push(['登録番号','氏名','学年',...items]);
+    parts.forEach(c=>{ let rowHtml=`<td class="n"><b>${esc(nameNo(c))}</b> <span style="color:var(--muted)">${c.grade}年</span></td>`; const csvRow=[c.regNo||'',c.name,c.grade+'年']; items.forEach(it=>{ const cell=markCell(bestRecIn(recs,c.id,it)); rowHtml+=cell.html; csvRow.push(cell.csv); }); tb.appendChild(el(`<tr>${rowHtml}</tr>`)); csv.push(csvRow); });
+    csv.push([]);
+    wrap.appendChild(t); card.appendChild(wrap);
+  };
+  evs.forEach(e=>{
+    const mk = e.type==='ekiden'?'🎽 ':(e.type==='road'?'🛣️ ':'');
+    const card=el(`<div class="card"><h3>${mk}${esc(e.name)}　<small style="color:var(--muted)">${e.date?fmtDate(e.date):''}</small></h3></div>`);
+    if(recByEv[e.id]) addMatrix(card, e.name, e.date, recByEv[e.id]);
+    else if(e.type==='ekiden') card.appendChild(el(`<div class="note note-info" style="margin-top:6px">駅伝は個人記録の入力は不要です。結果一覧の写真・画像を下に貼れます（数年分たまります）。</div>`));
+    if(officer || (e.resultDocs&&e.resultDocs.length)) card.appendChild(AttachmentsCard(e, officer, '結果記録の写真・画像（紙の一覧・スクショ等）', 'resultDocs'));
     box.appendChild(card);
   });
+  orphanList.forEach(g=>{ const card=el(`<div class="card"><h3>${esc(g.name)}　<small style="color:var(--muted)">${g.date?fmtDate(g.date):''}</small></h3></div>`); addMatrix(card,g.name,g.date,g.recs); box.appendChild(card); });
+  xls.onclick=()=>downloadFile(`大会別記録一覧_${DB.year}.csv`, rowsToCSV(csv), 'text/csv;charset=utf-8');
   return box;
 }
 
@@ -3065,7 +3170,8 @@ function ContentDetailScreen(){
   card.appendChild(el(`<div style="white-space:pre-wrap;line-height:1.8">${esc(c.body||'')}</div>`));
   box.appendChild(card);
   if(c.images&&c.images.length){ const g=el(`<div class="card"><h3>画像</h3><div style="display:flex;flex-wrap:wrap;gap:10px"></div></div>`); const gg=g.querySelector('div:last-child'); c.images.forEach(src=>gg.appendChild(el(`<a href="${src}" target="_blank" rel="noopener"><img src="${src}" style="width:120px;height:120px;object-fit:cover;border-radius:10px;border:1px solid var(--line)"></a>`))); box.appendChild(g); }
-  if(c.docs&&c.docs.length){ const g=el(`<div class="card"><h3>資料</h3></div>`); c.docs.forEach(d=>g.appendChild(el(`<a class="btn" href="${d.dataUrl}" target="_blank" rel="noopener" style="margin-top:6px;display:inline-flex">📄 ${esc(d.name)}</a>`))); box.appendChild(g); }
+  // 資料（写真・PDF・リンク）＝閲覧のみ。追加/削除は役員の「編集」内で。
+  if(c.docs && c.docs.length) box.appendChild(AttachmentsCard(c, false, '資料（写真・PDF・リンク）'));
   if(c.source||c.checkedDate){ box.appendChild(el(`<div class="note note-info">${c.source?`出典：${esc(c.source)}`:''}${(c.source&&c.checkedDate)?'　':''}${c.checkedDate?`確認日：${fmtDate(c.checkedDate)}`:''}</div>`)); }
   box.appendChild(el(`<div class="meta"><span>記入者：<b>${esc(userName(c.enteredBy))}</b></span><span>最終更新：<b>${fmtDateTime(c.updatedAt)}</b></span></div>`));
   if(Session.can('officer')){ const e=el(`<button class="btn btn-officer big">✏️ 編集</button>`); e.onclick=()=>go('contentEdit',{section:c.section,id:c.id}); box.appendChild(e); }
@@ -3110,6 +3216,7 @@ function ContentEditScreen(){
   };
   box.appendChild(save1);
   if(editing){ const del=el(`<button class="btn btn-danger big">削除</button>`); del.onclick=()=>{ if(confirm('この項目を削除しますか？')){ DB.content=DB.content.filter(x=>x.id!==c.id); save(); back(); } }; box.appendChild(del); }
+  box.appendChild(editAttachments(c, editing, '資料（写真・PDF・リンク）'));
   return box;
 }
 
@@ -3222,6 +3329,52 @@ function YearUpdateScreen(){
 }
 
 /* ---------- 準備中（プレースホルダ） ---------- */
+/* 機能・権限一覧 */
+function PermissionsScreen(){
+  const box=el('<div class="stack"></div>');
+  box.appendChild(el(`<div class="card"><h2>📋 機能・権限一覧</h2>
+    <p class="sub"><b style="color:#16a34a">○</b>＝できる ／ <b style="color:#c2410c">△</b>＝自分の分のみ ／ <span style="color:var(--muted)">－</span>＝できない。<br>権限は階層式で、<b>管理者は役員の、役員は会員のこと</b>も全てできます。</p></div>`));
+  const rows=[
+    ['大会の閲覧（日程・要項・会場）','○','○','○'],
+    ['大会への申込み（回答）','△','○','○'],
+    ['記録・自己ベストの閲覧','△','○','○'],
+    ['会場・トレーニング・ルール・安全・知恵袋・規約・検索','○','○','○'],
+    ['会員名簿（児童・保護者）閲覧・編集','－','○','○'],
+    ['大会の登録・編集／Excel一括登録','－','○','○'],
+    ['回答状況・支払い・リレー編成・申込完了・LINE文面','－','○','○'],
+    ['記録入力／エントリーシート・A4出力','－','○','○'],
+    ['会場の登録・編集','－','○','○'],
+    ['一括バックアップ・復元','－','○','○'],
+    ['会員管理（承認・在籍）','－','－','○'],
+    ['権限管理（役員・管理者の設定）','－','－','○'],
+    ['デフォルト設定（大会ルール初期値）','－','－','○'],
+    ['古い資料の整理（写真・PDF削除）','－','－','○'],
+    ['年度更新','－','－','○'],
+    ['権限プレビュー（各役の見え方を確認）','－','－','○'],
+  ];
+  const mk=v=> v==='○' ? '<b style="color:#16a34a">○</b>' : v==='△' ? '<b style="color:#c2410c">△</b>' : '<span style="color:var(--muted)">－</span>';
+  const wrap=el(`<div class="card"></div>`);
+  const t=el(`<table style="width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed">
+    <colgroup><col style="width:auto"><col style="width:16%"><col style="width:16%"><col style="width:20%"></colgroup>
+    <thead><tr>
+      <th style="text-align:left;padding:8px 4px;border-bottom:2px solid var(--line)">機能</th>
+      <th style="padding:8px 2px;border-bottom:2px solid var(--line);color:#2563eb;font-size:12px">会員</th>
+      <th style="padding:8px 2px;border-bottom:2px solid var(--line);color:#16a34a;font-size:12px">役員</th>
+      <th style="padding:8px 2px;border-bottom:2px solid var(--line);color:#7c3aed;font-size:12px">管理者</th>
+    </tr></thead><tbody></tbody></table>`);
+  const tb=t.querySelector('tbody');
+  rows.forEach(([f,m,o,a])=>{
+    tb.appendChild(el(`<tr>
+      <td style="padding:8px 6px;border-bottom:1px solid var(--line2);line-height:1.4">${esc(f)}</td>
+      <td style="text-align:center;padding:8px 4px;border-bottom:1px solid var(--line2)">${mk(m)}</td>
+      <td style="text-align:center;padding:8px 4px;border-bottom:1px solid var(--line2)">${mk(o)}</td>
+      <td style="text-align:center;padding:8px 4px;border-bottom:1px solid var(--line2)">${mk(a)}</td>
+    </tr>`));
+  });
+  wrap.appendChild(t); box.appendChild(wrap);
+  return box;
+}
+
 function SoonScreen(){
   const f = route.params.feature || 'この機能';
   const box = el('<div class="stack"></div>');
