@@ -247,7 +247,7 @@ const uid = (p) => p + '_' + Math.random().toString(36).slice(2,8);
    role_assignments / club_settings ...
    ============================================================= */
 const CURRENT_YEAR = 2026;
-const APP_VERSION = '2026-08-17 16:43 作成'; // アップロード後の確認用（この日時が変わると最新データに自動更新）
+const APP_VERSION = '2026-08-17 23:09 作成'; // アップロード後の確認用（この日時が変わると最新データに自動更新）
 const APP_HOME_URL = 'https://wobachan.github.io/rikujou/'; // LINE文面に載せるアプリのURL（本番では大会ページへの直接リンクを自動生成予定）
 
 function seedDB(){
@@ -434,8 +434,8 @@ function applyTrialState(db){
     if(!e.date || e.date>=CUT) return;
     e.status='done';
     // 主催者への提出も完了した記録
-    e.submission={ done:true, date:(e.hostClose||e.clubClose||e.date), submittedBy:by,
-      memo:'（お試し用サンプル：提出済み）', docsUrl:'', enteredBy:by, updatedAt:nowJST() };
+    e.submission={ done:true, sent:true, received:true, date:(e.hostClose||e.clubClose||e.date), submittedBy:by,
+      memo:'（お試し用サンプル：提出済み）', docs:[], enteredBy:by, updatedAt:nowJST() };
     // 参加状況：みらいふスタジアム開催（強化記録会を除く）＝4年以上が参加／それ以外＝全学年から約半数
     const elig=(e.rules&&e.rules.eligibility)?e.rules.eligibility:db.clubSettings.defaultEligibility;
     const grades=eligibleGrades(elig);
@@ -807,7 +807,7 @@ function render(){
     settings:'デフォルト設定', members:'会員管理', roles:'権限管理', soon:'準備中',
     events:'大会', eventDetail:'大会ページ', eventEdit:'大会の登録・編集', eventImport:'大会の一括取り込み',
     apply:'参加申し込み', responses:'回答状況',
-    payments:'支払い管理', relay:'リレー編成', submission:'申込完了の記録', lineText:'LINE文面',
+    payments:'支払い管理', relay:'リレー編成', escort:'帯同決定', submission:'申込完了の記録', lineText:'LINE文面',
     recordEntry:'記録入力', records:'記録・自己ベスト', a4records:'A4自己ベスト一覧', recordsByEvent:'大会別の記録一覧', docsCleanup:'古い資料の整理',
     content:'クラブ情報', contentDetail:'詳細', contentEdit:'編集', search:'検索', yearUpdate:'年度更新',
     venues:'会場情報', venueDetail:'会場の詳細', venueEdit:'会場の登録・編集', backup:'一括バックアップ・復元', permissions:'機能・権限一覧',
@@ -836,7 +836,7 @@ function render(){
     settings:SettingsScreen, members:MembersScreen, roles:RolesScreen, soon:SoonScreen,
     events:EventsScreen, eventDetail:EventDetailScreen, eventEdit:EventEditScreen, eventImport:EventImportScreen,
     apply:ApplyScreen, responses:ResponsesScreen,
-    payments:PaymentsScreen, relay:RelayScreen, submission:SubmissionScreen, lineText:LineTextScreen,
+    payments:PaymentsScreen, relay:RelayScreen, escort:EscortScreen, submission:SubmissionScreen, lineText:LineTextScreen,
     recordEntry:RecordEntryScreen, records:RecordsListScreen, a4records:A4RecordsScreen, recordsByEvent:EventRecordsScreen, docsCleanup:DocsCleanupScreen,
     content:ContentListScreen, contentDetail:ContentDetailScreen, contentEdit:ContentEditScreen, search:SearchScreen, yearUpdate:YearUpdateScreen,
     venues:VenuesScreen, venueDetail:VenueDetailScreen, venueEdit:VenueEditScreen, backup:BackupScreen, permissions:PermissionsScreen,
@@ -1042,7 +1042,7 @@ function MyFamilyCard(){
 /* ---------- 役員ホーム：今日やること（#49） ---------- */
 function OfficerTodoCard(){
   const box = el(`<div class="card edge-officer">
-    <h2 class="tag-officer">👨‍💼 今日やること</h2>
+    <h2 class="tag-officer">👨‍💼 やることリスト</h2>
     <p class="sub">受付中の大会から要対応を自動集計しています。</p>
   </div>`);
   const items=[];
@@ -1481,17 +1481,17 @@ function relayCandidates(ev){
 // LINE文面（締切前／締切後）
 function lineVenueName(ev){ const v=getVenue(ev.venueId); return v?v.name:'（会場未定）'; }
 function lineTextBefore(ev){
-  return `${fmtDate(ev.date)}\n【${ev.name} お申し込みのお願い】\n`+
+  return `【${fmtMD(ev.date)}　${ev.name} お申し込みのお願い】\n`+
     `会場：${lineVenueName(ev)}\n`+
-    `申込締切は ${fmtDate(eventDeadline(ev))} です。\n`+
+    `申込締切は　　${fmtMD(eventDeadline(ev))}　　です。\n`+
     `参加対象学年で、${ev.type==='road'?'部門のご報告':'参加・不参加のご回答'}がお済みでない方は、アプリからご${ev.type==='road'?'報告':'回答'}をお願いします。\n`+
     `▼大会の詳細・申し込みはこちら\n${APP_HOME_URL}\n（アプリを開き「大会」からこの大会を選んでください）`;
 }
 // 募集（最初のお知らせ）
 function lineTextRecruit(ev){
-  return `${fmtDate(ev.date)}\n【${ev.name} 参加者募集】\n`+
+  return `【${fmtMD(ev.date)}　${ev.name} 参加者募集】\n`+
     `会場：${lineVenueName(ev)}\n`+
-    `団内の申込締切は ${fmtDate(eventDeadline(ev))} です。\n`+
+    `団内の申込締切は　　${fmtMD(eventDeadline(ev))}　　です。\n`+
     `対象学年のお子さんは、${ev.type==='road'?'締切までにアプリからご報告':'参加・不参加どちらの場合も、締切までにアプリからご回答'}をお願いします。\n`+
     `▼大会の詳細・申し込みはこちら\n${APP_HOME_URL}\n（アプリを開き「大会」からこの大会を選んでください）`;
 }
@@ -1499,9 +1499,9 @@ function lineTextRecruit(ev){
 function lineTextCheck(ev){
   const s=eventResponseSummary(ev);
   const partLabel = ev.type==='road'?'申込済み':(ev.type==='ekiden'?'出場':'参加');
-  const submitBy = ev.hostClose ? fmtDate(ev.hostClose) : fmtDate(eventDeadline(ev));
-  return `${fmtDate(ev.date)}\n【${ev.name} エントリー内容のご確認】\n`+
-    `${submitBy} までに主催者へ提出します。その前に、内容のご確認をお願いします。\n`+
+  const submitBy = fmtMD(ev.hostClose || eventDeadline(ev));
+  return `【${fmtMD(ev.date)}　${ev.name} エントリー内容のご確認】\n`+
+    `　　${submitBy}　　までに主催者へ提出します。その前に、内容のご確認をお願いします。\n`+
     `${partLabel}：${s.participate}名 ／ 不参加：${s.decline}名\n`+
     `▼エントリー者一覧（下に画像を添付します。ご確認ください）\n`+
     `※お名前・学年・種目・参考記録に間違いや変更があれば、早めに事務局までご連絡ください。\n`+
@@ -1640,7 +1640,7 @@ function importRecordsCSV(ev, text){
 }
 // 「記録入力しました」LINE定型文
 function lineTextRecords(ev){
-  return `${fmtDate(ev.date)}\n【${ev.name} 記録について】\n`+
+  return `【${fmtMD(ev.date)}　${ev.name} 記録について】\n`+
     `今回の大会での記録を入力しました。\n`+
     `自己ベスト更新の場合は赤く表示されています。\n`+
     `アプリの「記録・自己ベスト」からご確認ください。\n`+
@@ -1676,8 +1676,8 @@ function EventsScreen(){
   const ics = el(`<button class="btn">📅 カレンダー(.ics)を書き出し</button>`);
   ics.onclick = ()=>{ const act=DB.events.filter(e=>e.status!=='draft'); if(!act.length){ alert('書き出せる大会がありません'); return; } downloadFile('陸上クラブ大会.ics', buildICS(act), 'text/calendar;charset=utf-8'); };
   tr.appendChild(ics);
-  box.appendChild(tools);
-  box.appendChild(el(`<div class="note note-info" style="font-size:12px">📅 .icsファイルはGoogleカレンダーに<b>インポート</b>できます（カレンダー設定→インポート）。各大会ページの「Googleカレンダーに追加」ボタンなら1件ずつ1クリックで追加できます。</div>`));
+  const toolsNote = el(`<div class="note note-info" style="font-size:12px">📅 .icsファイルはGoogleカレンダーに<b>インポート</b>できます（カレンダー設定→インポート）。各大会ページの「Googleカレンダーに追加」ボタンなら1件ずつ1クリックで追加できます。</div>`);
+  // ツールバー（登録・一括登録・カレンダー）は一覧の下に配置
 
   const TODAY_STR = nowJST().slice(0,10);
   let list = DB.events.slice();
@@ -1738,6 +1738,12 @@ function EventsScreen(){
     r.onclick = ()=>go('eventDetail',{id:e.id});
     box.appendChild(r);
   });
+  // ツールバー（大会を登録・一括登録・カレンダー）は一覧の一番下に
+  if(canEdit || DB.events.some(e=>e.status!=='draft')){
+    box.appendChild(el(`<div class="section-h" style="margin-top:14px"><h2 style="font-size:14px;color:var(--muted)">大会の登録・出力</h2><div class="line"></div></div>`));
+    box.appendChild(tools);
+    box.appendChild(toolsNote);
+  }
   return box;
 }
 
@@ -1884,19 +1890,21 @@ function EventDetailScreen(){
     box.appendChild(prompt);
   }
 
-  // 日程・費用
-  box.appendChild(el(`<div class="card">
-    <h3>📆 日程・参加費</h3>
+  // 日程・費用（初期は折りたたみ）
+  box.appendChild(el(`<details class="card">
+    <summary style="cursor:pointer;font-weight:800;font-size:16px">📆 日程・参加費</summary>
+    <div style="margin-top:8px">
     <div class="row" style="cursor:default"><div class="main"><small>開催日</small><b>${fmtDate(e.date)}</b></div></div>
     <div class="row" style="cursor:default;margin-top:8px"><div class="main"><small>クラブ内 申込</small><b>${fmtDate(e.clubOpen)} 〜 ${fmtDate(e.clubClose)}</b></div></div>
     <div class="row" style="cursor:default;margin-top:8px"><div class="main"><small>主催者 締切</small><b>${fmtDate(e.hostClose)}</b></div></div>
     <div class="row" style="cursor:default;margin-top:8px"><div class="main"><small>参加費</small><b>${esc(feeSummaryText(e))}</b></div></div>
-  </div>`));
+    </div>
+  </details>`));
 
   // タイプ別：トラック＝ルール／ロード＝部門／駅伝＝案内
   if(e.type==='track'){
-    const rules = el(`<div class="card"><h3>📋 大会ルール</h3>
-      <p class="sub">デフォルト設定に、この大会だけの例外を反映した内容です。</p></div>`);
+    const rules = el(`<details class="card"><summary style="cursor:pointer;font-weight:800;font-size:16px">📋 大会ルール</summary>
+      <p class="sub">デフォルト設定に、この大会だけの例外を反映した内容です。</p></details>`);
     rules.insertAdjacentHTML('beforeend', ruleLine(e,'eligibility'));
     rules.insertAdjacentHTML('beforeend', ruleLine(e,'indivEvents'));
     rules.insertAdjacentHTML('beforeend', ruleLine(e,'relay'));
@@ -1962,7 +1970,7 @@ function EventDetailScreen(){
         <div class="hint" style="margin-top:8px">合計 ${bd.priority+bd.ifneeded}名が出場に前向きです。チーム編成はコーチ陣が当日行います。</div></div>`));
     }
     // 役員運営メニュー（この大会）— 時系列＋担当（募集→締切3日前→リレー→エントリー確認→申込書→提出→支払い→記録→複製）
-    const ops=el(`<div class="card edge-officer"><h3>🟢 役員運営（この大会）</h3><p class="sub">上から順に進めます。担当【】と、完了時の「💮」を表示。</p></div>`);
+    const ops=el(`<div class="card edge-officer"><h3>🟢 役員業務の進捗</h3><p class="sub">上から順に進めます。担当【】と、完了時の「💮」を表示。</p></div>`);
     const DONE='<span class="badge b-done">完了 💮</span>';
     const tag=r=>`<small style="color:var(--muted);font-weight:400">【${r}】</small>`;
     const mkOp=(labelHtml,to,rightHtml,params)=>{ const b=el(`<button class="btn big" style="display:flex;align-items:center;gap:8px;text-align:left;margin-top:8px"><span>${labelHtml}</span>${rightHtml?`<span style="margin-left:auto;flex:none">${rightHtml}</span>`:''}</button>`); b.onclick=()=>go(to,{eventId:e.id,...(params||{})}); ops.appendChild(b); };
@@ -1971,8 +1979,13 @@ function EventDetailScreen(){
     mkOp('✉️ 募集LINE文面 '+tag('会長'),'lineText', ld.recruit?DONE:'', {kind:'recruit'});
     // 2. 締切3日前（会長）
     mkOp('✉️ 締切3日前LINE文面 '+tag('会長'),'lineText', ld.before?DONE:'', {kind:'before'});
-    // 3. リレー編成（会長⇄コーチ）
-    if(relayOffered(e)){ const rc=relayCandidates(e); mkOp('🏃 リレー編成 '+tag('会長⇄コーチ'),'relay',`<span class="badge b-common soft">候補${rc.priority.length+rc.ifneeded.length}名</span>`); }
+    // 3. リレー編成（会長⇄コーチ）＋ 帯同決定
+    if(relayOffered(e)){
+      const rc=relayCandidates(e);
+      const rRight = e.relayStatus==='done'?DONE : e.relayStatus==='skip'?'<span class="badge b-common soft">不参加</span>' : `<span class="badge b-common soft">候補${rc.priority.length+rc.ifneeded.length}名</span>`;
+      mkOp('🏃 リレー編成 '+tag('会長⇄コーチ'),'relay', rRight);
+    }
+    mkOp('🚗 帯同決定 '+tag('会長⇄コーチ'),'escort', (e.escort&&e.escort.decided)?DONE:'');
     // 4. エントリーシート（公式様式）書き出し（事務局）
     const es=el(`<button class="btn big" style="display:flex;align-items:center;gap:8px;text-align:left;margin-top:8px"><span>${e.type==='track'?'📋 エントリーシート（公式様式）書き出し':'📄 エントリーシート書き出し（Excel/CSV）'} ${tag('事務局')}</span></button>`);
     es.onclick=()=>{ if(e.type==='track') downloadEntryForm(e); else downloadEntrySheet(e); }; ops.appendChild(es);
@@ -2891,6 +2904,35 @@ function RelayScreen(){
     card.appendChild(el(`<div class="meta"><span>人数：<b>${team.memberIds.length}名</b></span></div>`));
     box.appendChild(card);
   });
+  // リレー編成の状態（不参加／編成済み）
+  const st=ev.relayStatus;
+  const statusCard=el(`<div class="card"><h3>リレー編成の進捗</h3>
+    <p class="sub">現在：${st==='done'?'<b style="color:var(--green)">編成済み 💮</b>':st==='skip'?'<b>リレー不参加</b>':'未設定'}</p></div>`);
+  const brow=el(`<div class="btn-row"></div>`);
+  const bSkip=el(`<button class="btn ${st==='skip'?'btn-officer':''}">「不参加」</button>`);
+  bSkip.onclick=()=>{ ev.relayStatus=(st==='skip')?null:'skip'; ev.updatedAt=nowJST(); ev.enteredBy=Session.userId; save(); render(); };
+  const bDone=el(`<button class="btn ${st==='done'?'btn-officer':''}">「編成済み」</button>`);
+  bDone.onclick=()=>{ ev.relayStatus=(st==='done')?null:'done'; ev.updatedAt=nowJST(); ev.enteredBy=Session.userId; save(); render(); };
+  brow.appendChild(bSkip); brow.appendChild(bDone); statusCard.appendChild(brow);
+  box.appendChild(statusCard);
+  return box;
+}
+/* 帯同決定（帯同者の氏名を記入して決定） */
+function EscortScreen(){
+  const ev=getEvent(route.params.eventId); const box=el('<div class="stack"></div>');
+  if(!Session.can('officer')){ box.appendChild(el(`<div class="note note-warn">役員以上のみ。</div>`)); return box; }
+  if(!ev){ box.appendChild(el(`<div class="note note-warn">大会が見つかりません。</div>`)); return box; }
+  if(!ev.escort) ev.escort={names:'',decided:false};
+  const es=ev.escort;
+  const card=el(`<div class="card edge-officer"><h3>🚗 帯同決定</h3><p class="sub">${esc(ev.name)}　当日の帯同者（引率）を決めます。</p></div>`);
+  card.appendChild(el(`<label class="f">帯同者氏名（複数は改行や「、」で）</label>`));
+  const ta=el(`<textarea class="f" style="min-height:90px">${esc(es.names||'')}</textarea>`); card.appendChild(ta);
+  ta.onblur=()=>{ es.names=ta.value.trim(); save(); };
+  const dec=el(`<button class="btn ${es.decided?'btn-danger':'btn-officer'} big" style="margin-top:8px">${es.decided?'決定を取り消す':'決定する'}</button>`);
+  dec.onclick=()=>{ es.names=ta.value.trim(); es.decided=!es.decided; es.decidedAt=nowJST(); es.enteredBy=Session.userId; ev.updatedAt=nowJST(); save(); render(); };
+  card.appendChild(dec);
+  box.appendChild(card);
+  if(es.decided) box.appendChild(el(`<div class="note note-info">✅ 帯同者：${esc(es.names||'（未記入）')}（決定 💮）</div>`));
   return box;
 }
 
@@ -2901,19 +2943,30 @@ function SubmissionScreen(){
   const ev=getEvent(route.params.eventId); const box=el('<div class="stack"></div>');
   if(!Session.can('officer')){ box.appendChild(el(`<div class="note note-warn">役員以上のみ。</div>`)); return box; }
   if(!ev){ box.appendChild(el(`<div class="note note-warn">大会が見つかりません。</div>`)); return box; }
-  const sub=ev.submission||{done:false,date:'',submittedBy:Session.userId,memo:'',docsUrl:''};
-  box.appendChild(el(`<div class="card edge-officer"><h2>📤 申込完了の記録</h2>
-    <p class="sub">${esc(ev.name)}　主催者への申込完了をここに記録します。</p></div>`));
-  box.appendChild(el(`<div class="card">
-    <label style="display:flex;align-items:center;gap:8px;padding:4px 0"><input type="checkbox" id="sub_done" ${sub.done?'checked':''} style="width:20px;height:20px"> <b>主催者へ申込完了した</b></label>
-    <label class="f">申込日</label><input class="f" id="sub_date" type="date" value="${esc(sub.date||'')}">
-    <label class="f">申込担当者</label><select class="f" id="sub_by">${DB.users.filter(u=>u.role!=='member').map(u=>`<option value="${u.id}" ${u.id===(sub.submittedBy||Session.userId)?'selected':''}>${esc(u.name)}（${ROLE[u.role].label}）</option>`).join('')}</select>
-    <label class="f">メモ（申込完了メールの内容・エントリー内容など）</label><textarea class="f" id="sub_memo">${esc(sub.memo||'')}</textarea>
-    <label class="f">資料リンク（完了メール／エントリー表のURL）</label><input class="f" id="sub_docs" value="${esc(sub.docsUrl||'')}" placeholder="https://...">
-    <div class="hint">スクリーンショットやPDFの本体保管は本番バックエンド接続時に対応します（今はリンク／メモで記録）。</div>
-  </div>`));
-  const b=el(`<button class="btn btn-officer big">保存する</button>`);
-  b.onclick=()=>{ ev.submission={ done:$('#sub_done').checked, date:$('#sub_date').value, submittedBy:$('#sub_by').value, memo:$('#sub_memo').value.trim(), docsUrl:$('#sub_docs').value.trim(), enteredBy:Session.userId, updatedAt:nowJST() }; save(); alert('保存しました'); back(); };
+  if(!ev.submission) ev.submission={};
+  const sub=ev.submission;
+  if(!sub.date) sub.date=nowJST().slice(0,10);                         // 申込送信日＝今日をデフォルト
+  if(!sub.submittedBy){ const jimu=DB.users.find(u=>/事務局/.test(u.staffRole||'')); sub.submittedBy = jimu?jimu.id:Session.userId; } // 申込者＝事務局
+  const officers=DB.users.filter(u=>u.role!=='member');
+  const card=el(`<div class="card edge-officer"><h3>📤 申込完了の記録</h3></div>`);
+  const sentL=el(`<label style="display:flex;align-items:center;gap:8px;padding:8px 0"><input type="checkbox" id="sub_sent" ${sub.sent?'checked':''} style="width:22px;height:22px"> <b>① 申込を送信した</b></label>`); card.appendChild(sentL);
+  card.appendChild(el(`<label class="f">申込送信日</label>`));
+  const dt=el(`<input class="f" id="sub_date" type="date" value="${esc(sub.date||'')}">`); card.appendChild(dt);
+  card.appendChild(el(`<label class="f">申込者</label>`));
+  const by=el(`<select class="f" id="sub_by">${officers.map(u=>`<option value="${u.id}" ${u.id===sub.submittedBy?'selected':''}>${esc(u.name)}（${esc(u.staffRole||ROLE[u.role].label)}）</option>`).join('')}</select>`); card.appendChild(by);
+  card.appendChild(el(`<label class="f">備考</label>`));
+  const memo=el(`<textarea class="f" id="sub_memo">${esc(sub.memo||'')}</textarea>`); card.appendChild(memo);
+  const recvL=el(`<label style="display:flex;align-items:flex-start;gap:8px;padding:10px 0 4px"><input type="checkbox" id="sub_recv" ${sub.received?'checked':''} style="width:22px;height:22px;margin-top:2px"> <b>② 主催者から申込受領の連絡が来た<br><span style="font-weight:400;font-size:12px;color:var(--muted)">（必要な場合は、市のスポーツ推進課にも書類提出済み）</span></b></label>`); card.appendChild(recvL);
+  box.appendChild(card);
+  function persist(){ sub.sent=sentL.querySelector('input').checked; sub.date=dt.value; sub.submittedBy=by.value; sub.memo=memo.value.trim(); sub.received=recvL.querySelector('input').checked; sub.done=!!(sub.sent&&sub.received); sub.enteredBy=Session.userId; sub.updatedAt=nowJST(); save(); }
+  sentL.querySelector('input').onchange=()=>{ persist(); render(); };
+  recvL.querySelector('input').onchange=()=>{ persist(); render(); };
+  dt.onchange=persist; by.onchange=persist; memo.onblur=persist;
+  // 申込のスクショ・資料（写真・PDF）。スマホのスクショを貼り付け可能
+  box.appendChild(AttachmentsCard(sub, true, '申込のスクショ・資料（完了メール／エントリー表など）', 'docs'));
+  box.appendChild(el(`<div class="note ${sub.done?'note-info':'note-warn'}" style="margin-top:8px">${sub.done?'✅ ①②の両方が完了。申込完了の記録は「完了 💮」です。':'①「申込を送信した」と②「主催者から受領連絡」の両方にチェックが入ると、完了 💮 になります。'}</div>`));
+  const b=el(`<button class="btn btn-officer big">保存して戻る</button>`);
+  b.onclick=()=>{ persist(); back(); };
   box.appendChild(b);
   return box;
 }
