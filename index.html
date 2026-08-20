@@ -271,7 +271,7 @@ const uid = (p) => p + '_' + Math.random().toString(36).slice(2,8);
    role_assignments / club_settings ...
    ============================================================= */
 const CURRENT_YEAR = 2026;
-const APP_VERSION = '2026-08-20 卒団生は管理者だけが確認できる'; // アップロード後の確認用（この日時が変わると最新データに自動更新）
+const APP_VERSION = '2026-08-20 バッジはいまの立場を表示'; // アップロード後の確認用（この日時が変わると最新データに自動更新）
 const APP_HOME_URL = 'https://wobachan.github.io/rikujou/'; // LINE文面に載せるアプリのURL（本番では大会ページへの直接リンクを自動生成予定）
 
 function seedDB(){
@@ -1004,8 +1004,10 @@ function render(){
   { const hb=bar.querySelector('#homeBtn'); if(hb) hb.onclick=goHome; }
   {  // ログイン者の名前をバーに常時表示。押すとメールアドレスなどの詳細を開く
     const u=Session.user();
-    const rl=ROLE[Session.baseRole()];
-    const chip=el(`<button class="userchip" title="${esc(rl.label)}／ログイン情報">
+    // バッジは「いま使っている立場」を映す（一般会員として使用中なら青の「一般」）
+    const rl=ROLE[Session.effectiveRole()], baseRl=ROLE[Session.baseRole()];
+    const chipTitle = (rl!==baseRl) ? `${rl.label}として使用中（実際の権限：${baseRl.label}）` : `${rl.label}／ログイン情報`;
+    const chip=el(`<button class="userchip" title="${esc(chipTitle)}">
       <span class="rolechip" style="background:${rl.color}">${esc(rl.short)}</span>
       <span class="av">${esc((u.name||"？").trim().charAt(0))}</span>
       <span class="nm">${esc(u.name)}</span>
