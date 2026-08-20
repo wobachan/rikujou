@@ -271,7 +271,7 @@ const uid = (p) => p + '_' + Math.random().toString(36).slice(2,8);
    role_assignments / club_settings ...
    ============================================================= */
 const CURRENT_YEAR = 2026;
-const APP_VERSION = '2026-08-20 個人別の記録一覧・エントリー様式は氏名'; // アップロード後の確認用（この日時が変わると最新データに自動更新）
+const APP_VERSION = '2026-08-20 卒団生は管理者だけが確認できる'; // アップロード後の確認用（この日時が変わると最新データに自動更新）
 const APP_HOME_URL = 'https://wobachan.github.io/rikujou/'; // LINE文面に載せるアプリのURL（本番では大会ページへの直接リンクを自動生成予定）
 
 function seedDB(){
@@ -505,8 +505,93 @@ function applyTrialState(db){
       });
     }
   });
+  addPastYears(db, by);   // 昨年度・一昨年度のサンプル（過去の記録・卒団児童）
   return db;
 }
+/* 過去年度（2024・2025年度）のサンプルを作る。
+   ・大会は status='done'、開催日は当時の日付
+   ・記録の grade は「当時の学年」で保存する（年度更新後も当時の学年が残る仕組みの確認になる）
+   ・当時1年生に届かない子は参加しない
+   ・卒団児童（今はもう在籍していない先輩）も数名つくる */
+function addPastYears(db, by){
+  const PAST=[
+    { y:2025, evs:[
+      {id:'e_p25a', name:'第31回 山口県小学生春季陸上競技大会', date:'2025-06-14', venueId:'v_y2', elig:'3年生以上', fee:200},
+      {id:'e_p25b', name:'第76回 山口県陸上競技強化記録会',     date:'2025-05-17', venueId:'v_y2', elig:null,       fee:550},
+      {id:'e_p25c', name:'第37回 山口県小学生陸上競技選手権大会', date:'2025-07-06', venueId:'v_y2', elig:'3年生以上', fee:900},
+      {id:'e_p25d', name:'日清食品カップ 山口県小学生陸上競技交流大会', date:'2025-09-07', venueId:'v_y2', elig:'4年生以上', fee:1000},
+    ]},
+    { y:2024, evs:[
+      {id:'e_p24a', name:'第30回 山口県小学生春季陸上競技大会', date:'2024-06-15', venueId:'v_y2', elig:'3年生以上', fee:200},
+      {id:'e_p24b', name:'第75回 山口県陸上競技強化記録会',     date:'2024-05-18', venueId:'v_y2', elig:null,       fee:550},
+      {id:'e_p24c', name:'第36回 山口県小学生陸上競技選手権大会', date:'2024-07-07', venueId:'v_y2', elig:'3年生以上', fee:900},
+    ]},
+  ];
+  // 卒団児童（2025年度末に卒団＝当時6年）。ふだんは画面に出ないが、データが残ることの確認用
+  const GRADS=[
+    {id:'c_g1', name:'長嶋 茂子',   kana:'ながしま しげこ', gender:'女', guardians:['g_taka']},
+    {id:'c_g2', name:'木村 スマオ', kana:'きむら すまお',   gender:'男', guardians:['g_koba','g_koba2']},
+    {id:'c_g3', name:'中村 雅子',   kana:'なかむら まさこ', gender:'女', guardians:['g_naka']},
+  ];
+  GRADS.forEach(g=>{
+    if((db.children||[]).some(c=>c.id===g.id)) return;
+    db.children.push({ id:g.id, name:g.name, kana:g.kana, grade:6, gender:g.gender,
+      school:'みどり小', joinYear:2021, status:'grad', gradYear:2025, regNo:'', note:'（卒団・過去の記録の確認用）',
+      enteredBy:by, updatedAt:nowJST() });
+    g.guardians.forEach(gid=>{
+      if(!(db.guardianChildren||[]).some(l=>l.childId===g.id && l.guardianId===gid))
+        db.guardianChildren.push({ guardianId:gid, childId:g.id });
+    });
+  });
+
+  const CUR=db.year||2026;
+  PAST.forEach(({y,evs})=>{
+    evs.forEach((spec,ei)=>{
+      if((db.events||[]).some(e=>e.id===spec.id)) return;
+      const ev={ id:spec.id, name:spec.name, type:'track', date:spec.date, venueId:spec.venueId,
+        clubOpen:'', clubClose:'', hostClose:'', feePerEvent:spec.fee, relayTeamFee:null, feeFlat:null,
+        applyMethod:null, categoryRule:null, categories:[], status:'done',
+        rules:{ eligibility:spec.elig, indivEvents:null, relay:null, eventCatalog:null },
+        meetPlace:'', meetTime:'', outline:'', docsUrl:'', note:'（過去年度のサンプル）', docs:[], relayTeams:[],
+        submission:{ done:true, sent:true, received:true, date:spec.date, submittedBy:by, memo:'（過去年度のサンプル）', docs:[], enteredBy:by, updatedAt:nowJST() },
+        payment:{ collected:true, collectedDate:spec.date, collectedBy:by, paid:true, paidDate:spec.date, paidBy:by },
+        escort:{ names:'', decided:false, childIds:[] },
+        enteredBy:by, updatedAt:nowJST() };
+      db.events.push(ev);
+      // 当時の学年でふるい分け
+      const grades=eligibleGrades(spec.elig||db.clubSettings.defaultEligibility);
+      const kiroku=/記録会/.test(spec.name);
+      (db.children||[]).forEach((c,ci)=>{
+        if(c.status==='left') return;
+        // 卒団生は「卒団した年度」を基準に当時の学年を出す
+        const gradeThen = (c.status==='grad') ? (c.grade - ((c.gradYear||CUR) - y)) : (c.grade - (CUR - y));
+        if(gradeThen<1 || gradeThen>6) return;
+        if(!grades.includes(gradeThen)) return;
+        if((ci+ei)%4===0) return;                      // 全員は出ない（3/4くらい）
+        const mid = kiroku ? '800m' : (c.gender==='男' ? '1000m' : '800m');
+        const want = kiroku ? ['100m','200m',mid] : ['100m',mid];
+        const items = want.filter(it=>itemAllowed(ev, gradeThen, c.gender, it));
+        db.participations.push({ id:uid('p'), eventId:ev.id, childId:c.id, status:'participate',
+          events:items, relay:'no', category:null, payStatus:'paid', payBy:by, payAt:nowJST(),
+          enteredBy:by, updatedAt:nowJST() });
+        items.forEach((item,k)=>{
+          db.records.push({ id:uid('r'), childId:c.id, item,
+            mark:mkMark(item.replace('m',''), gradeThen, ci*3 + k*7 + Number(spec.date.slice(5,7))),
+            date:spec.date, eventName:spec.name, eventId:ev.id, grade:gradeThen, rank:null,
+            enteredBy:by, updatedAt:nowJST() });
+        });
+      });
+      // 帯同（過去年度）＝毎回ちがう家庭にお願いした記録
+      const act=(db.children||[]).filter(c=>c.status==='active');
+      if(act.length){
+        const pick=[act[(ei*2)%act.length].id, act[(ei*2+5)%act.length].id];
+        ev.escort={ names:'', decided:true, childIds:[...new Set(pick)], decidedAt:nowJST(), enteredBy:by };
+      }
+    });
+  });
+  return db;
+}
+
 // お試し用の記録タイム生成（適当だが学年で緩やかに変化）。kind:'800'|'1000'
 function mkMark(kind, grade, seed){
   // 種目ごとの目安：[6年生のタイム（秒）, 1学年下がるごとに遅くなる秒数]
@@ -588,7 +673,10 @@ function resetDB(){ DB = applyTrialState(migrate(seedDB())); DB.__ver = APP_VERS
 const getUser  = id => DB.users.find(u=>u.id===id);
 const getChild = id => DB.children.find(c=>c.id===id);
 const getGuardian = id => DB.guardians.find(g=>g.id===id);
-const childrenOfGuardian = gid => DB.guardianChildren.filter(x=>x.guardianId===gid).map(x=>getChild(x.childId)).filter(Boolean);
+// 卒団・退会した児童は画面に出さない（データ自体は残す。クラブ方針＝完全削除よりアーカイブ優先）
+const isOnRoster = c => !!c && c.status!=='grad' && c.status!=='left';
+const rosterChildren = () => DB.children.filter(isOnRoster);
+const childrenOfGuardian = gid => DB.guardianChildren.filter(x=>x.guardianId===gid).map(x=>getChild(x.childId)).filter(isOnRoster);
 const guardiansOfChild  = cid => DB.guardianChildren.filter(x=>x.childId===cid).map(x=>getGuardian(x.guardianId)).filter(Boolean);
 const userName = id => (getUser(id)?.name) || '—';
 // 氏名の左に登録番号を付けて表示（登録番号があれば「340 山田 太郎」）
@@ -1223,7 +1311,6 @@ function officerTodos(e){
 function OfficerTodoCard(){
   const box = el(`<div class="card edge-officer">
     <h2 class="tag-officer">👨‍💼 やることリスト</h2>
-    <p class="sub">大会ごとに未処理の件数をまとめています。タップすると大会ページが開きます。</p>
   </div>`);
   const rows=[];
   DB.events.filter(e=>e.status!=='draft' && e.status!=='done').forEach(e=>{
@@ -1254,7 +1341,7 @@ function AdminPanelCard(){
     box.appendChild(el(`<div class="note note-warn"><b>⚠️ 注意：</b>管理者が${admins}名です。紛失・卒団に備え、<b>管理者は2名以上</b>を推奨します。</div>`));
   }
   box.appendChild(el(`<div class="row" style="margin-top:8px; cursor:default">
-    <div class="main"><b>会員数</b><small>児童 ${DB.children.length}名 ／ 保護者 ${DB.guardians.length}名</small></div>
+    <div class="main"><b>会員数</b><small>児童 ${rosterChildren().length}名 ／ 保護者 ${DB.guardians.length}名</small></div>
     <span class="badge b-admin">${DB.year}年度</span>
   </div>`));
   return box;
@@ -1268,7 +1355,7 @@ function ChildrenScreen(){
   const canAll = Session.can('officer');
   let list;
   if(canAll){
-    list = DB.children.slice();
+    list = (route.params.withGrad && Session.can('admin')) ? DB.children.slice() : rosterChildren();
   }else{
     // 一般会員：自分の子どもだけ（#66 個人情報保護）
     list = childrenOfGuardian(Session.user().guardianId);
@@ -1277,8 +1364,16 @@ function ChildrenScreen(){
 
   const head = el(`<div class="card ${canAll?'edge-officer':'edge-member'}">
     <h2>👥 児童名簿</h2>
-    <p class="sub">${canAll?'クラブの全児童':'あなたのお子さん'}：${list.length}名</p>
+    <p class="sub">${canAll?'在籍中の児童':'あなたのお子さん'}：${list.length}名</p>
   </div>`);
+  if(Session.can('admin')){
+    // 卒団・退会した児童はふだん表示しない。データは残っているので、必要なときだけここで確認できる
+    const hidden = DB.children.filter(c=>!isOnRoster(c)).length;
+    const tg = el(`<label style="display:flex;align-items:center;gap:8px;padding:8px 0"><input type="checkbox" ${route.params.withGrad?'checked':''} style="width:20px;height:20px"> <span>卒団・退会した児童も表示する（${hidden}名）</span></label>`);
+    tg.querySelector('input').onchange=e=>{ route.params.withGrad = e.target.checked?1:0; render(); };
+    head.appendChild(tg);
+    if(route.params.withGrad) head.appendChild(el(`<div class="hint">卒団・退会した児童は、ふだんは名簿にも記録にも出ません（記録は残っています）。</div>`));
+  }
   if(canAll){
     const add = el(`<button class="btn btn-officer">＋ 児童を登録</button>`);
     add.onclick = ()=>go('childEdit',{id:null});
@@ -1306,6 +1401,11 @@ function ChildDetailScreen(){
   const c = getChild(route.params.id);
   const box = el('<div class="stack"></div>');
   if(!c){ box.appendChild(el(`<div class="note note-warn">児童が見つかりません。</div>`)); return box; }
+  // 卒団・退会した児童は管理者以外には見せない（名簿からは辿れないが、直接開かれた場合の保険）
+  if(!isOnRoster(c) && !Session.can('admin')){
+    box.appendChild(el(`<div class="note note-warn">この児童は在籍していません。</div>`));
+    return box;
+  }
 
   const canAll = Session.can('officer');
   const statusBadge = s => ({active:'在籍',pause:'休会',grad:'卒団',left:'退会'}[s]||s);
@@ -1488,11 +1588,14 @@ function MembersScreen(){
 function RolesScreen(){
   const box = el('<div class="stack"></div>');
   if(!Session.can('admin')){ box.appendChild(el(`<div class="note note-warn">管理者のみ。</div>`)); return box; }
-  box.appendChild(el(`<div class="card edge-admin"><h2>🔐 権限管理</h2><p class="sub">各ユーザーの権限を変更できます。管理者は2名以上を推奨。</p></div>`));
+  box.appendChild(el(`<div class="card edge-admin"><h2>🔐 権限管理・役職</h2>
+    <p class="sub">権限（一般会員／役員／管理者）と、クラブでの役職（会長・事務局・会計・監督・コーチなど）を設定します。管理者は2名以上を推奨。</p></div>`));
+  // 役職の入力候補（自由入力もできます）
+  box.appendChild(el(`<datalist id="staffRoleList">${['会長','副会長','事務局','会計','監督','副監督','コーチ'].map(x=>`<option value="${x}">`).join('')}</datalist>`));
 
   DB.users.forEach(u=>{
     const r = el(`<div class="card"><div class="row" style="cursor:default">
-      <div class="main"><b>${esc(u.name)}</b><small>${esc(u.email)}</small></div>
+      <div class="main"><b>${esc(u.name)}</b><small>${esc(u.email)}${u.staffRole?` ・ 🎽 ${esc(u.staffRole)}`:''}</small></div>
       <span class="badge ${ROLE[u.role].badge}">${ROLE[u.role].label}</span>
     </div></div>`);
     const sel = el(`<div style="margin-top:10px"><label class="f">権限</label>
@@ -1509,6 +1612,13 @@ function RolesScreen(){
       u.role = newRole; save(); render();
     };
     r.appendChild(sel);
+    // クラブでの役職（会長・事務局・会計・監督・コーチ など）
+    const stf = el(`<div style="margin-top:10px"><label class="f">クラブでの役職（任意）</label></div>`);
+    const inp = el(`<input class="f" list="staffRoleList" value="${esc(u.staffRole||'')}" placeholder="例）会長・事務局・会計・監督・コーチ">`);
+    inp.onchange=()=>{ u.staffRole=inp.value.trim(); save(); render(); };
+    stf.appendChild(inp);
+    stf.appendChild(el(`<div class="hint">「監督」「副監督」「コーチ」を入れた方のご家庭は、<b>帯同決定の一覧で「コーチ」</b>と表示され、帯同の候補から外れます。<br>「事務局」の方は、申込完了の記録で申込者の初期値になります。</div>`));
+    r.appendChild(stf);
     box.appendChild(r);
   });
   return box;
@@ -1647,7 +1757,7 @@ function paymentList(ev){
   if(!feeApplies(ev)) return [];
   return DB.participations.filter(p=>p.eventId===ev.id && p.status==='participate')
     .map(p=>({ p, child:getChild(p.childId), fee:childFee(ev,p) }))
-    .filter(x=>x.child)
+    .filter(x=>isOnRoster(x.child))   // 卒団・退会は出さない
     .sort((a,b)=> (a.p.payStatus==='unpaid'?0:1)-(b.p.payStatus==='unpaid'?0:1) || b.child.grade-a.child.grade);
 }
 // 集計（人数・合計金額・支払状況）。※個人ごとの支払状況は役員のみが見られる画面でのみ表示する
@@ -1731,11 +1841,11 @@ function recordRows(ev){
   const parts=DB.participations.filter(p=>p.eventId===ev.id && p.status==='participate');
   if(ev.type==='track'){
     const rows=[];
-    parts.forEach(p=>{ const child=getChild(p.childId); if(!child) return; (p.events||[]).forEach(item=>rows.push({child,item,cat:''})); });
+    parts.forEach(p=>{ const child=getChild(p.childId); if(!isOnRoster(child)) return; (p.events||[]).forEach(item=>rows.push({child,item,cat:''})); });
     return rows;
   }
   // ロード/駅伝：1児童＝1行、記録の種別(item)は大会名でまとめる
-  return parts.map(p=>({ child:getChild(p.childId), item:ev.name, cat:p.category||'' })).filter(r=>r.child);
+  return parts.map(p=>({ child:getChild(p.childId), item:ev.name, cat:p.category||'' })).filter(r=>isOnRoster(r.child));
 }
 function recordsProgress(ev){ const rows=recordRows(ev); const entered=rows.filter(r=>getRecord(ev.id,r.child.id,r.item)).length; return { total:rows.length, entered }; }
 const recordsNeeded = ev => (daysUntil(ev.date)<0 || ev.status==='done') && recordRows(ev).length>0 && recordsProgress(ev).entered<recordRows(ev).length;
@@ -1895,10 +2005,15 @@ function EventsScreen(){
   }
   const GROUP={ 0:'🔴 未返答（申込が必要）', 1:'📅 受付前（もうすぐ受付開始）', 2:'✅ 返答済み', 3:'🏁 終了・対象外の大会' };
   let lastGroup=null;
+  // 過去の年度の大会は折りたたみへ（今年度の大会が埋もれないように）
+  const pastCount = list.filter(e=>eventYear(e) < DB.year).length;
+  const pastBox = pastCount ? el(`<details class="card"><summary style="cursor:pointer;font-weight:800;font-size:16px">🗄 過去の年度の大会（${pastCount}件）</summary>
+    <p class="sub">${DB.year}年度より前の大会です。記録は「記録・自己ベスト」に残っています。</p></details>`) : null;
   list.forEach(e=>{
     const v = getVenue(e.venueId);
+    const isPast = eventYear(e) < DB.year;
     // 会員向けはグループ見出しを挿入（未返答／受付前／返答済み／終了・対象外）
-    if(!canEdit){
+    if(!canEdit && !isPast){
       const g = e.__t.order;
       if(g!==lastGroup){ box.appendChild(el(`<div class="section-h"><h2>${GROUP[g]}</h2><div class="line"></div></div>`)); lastGroup=g; }
     }
@@ -1940,8 +2055,9 @@ function EventsScreen(){
       </div>`);
     }
     r.onclick = ()=>go('eventDetail',{id:e.id});
-    box.appendChild(r);
+    (isPast && pastBox ? pastBox : box).appendChild(r);
   });
+  if(pastBox) box.appendChild(pastBox);
   // ツールバー（大会を登録・一括登録・カレンダー）は一覧の一番下に
   if(canEdit || DB.events.some(e=>e.status!=='draft')){
     box.appendChild(el(`<div class="section-h" style="margin-top:14px"><h2 style="font-size:14px;color:var(--muted)">大会の登録・出力</h2><div class="line"></div></div>`));
@@ -1985,9 +2101,12 @@ function ruleLine(ev,key){
     if(key==='relay' && resolveRule(ev,key)!=='リレーなし') val=RELAY_ITEM;
   }
   const over = isOverridden(ev,key);
+  // 「デフォルト」バッジは役員の設定作業のためのもの。会員には出さない（「🟠今回だけ変更」は全員に出す）
+  const badge = over ? `<span class="badge b-warn">🟠 今回だけ変更</span>`
+                     : (Session.can('officer') ? `<span class="badge b-common soft">デフォルト</span>` : '');
   return `<div class="row" style="cursor:default; margin-top:8px">
     <div class="main"><small>${def.label}</small><b>${esc(val)}</b></div>
-    ${over?`<span class="badge b-warn">🟠 今回だけ変更</span>`:`<span class="badge b-common soft">デフォルト</span>`}
+    ${badge}
   </div>`;
 }
 
@@ -2110,7 +2229,7 @@ function EventDetailScreen(){
   // タイプ別：トラック＝ルール／ロード＝部門／駅伝＝案内
   if(e.type==='track'){
     const rules = el(`<details class="card"><summary style="cursor:pointer;font-weight:800;font-size:16px">📋 大会ルール</summary>
-      <p class="sub">デフォルト設定に、この大会だけの例外を反映した内容です。</p></details>`);
+      <p class="sub">${canEdit?'デフォルト設定に、この大会だけの例外を反映した内容です。':'この大会のルールです。<span class="badge b-warn">🟠 今回だけ変更</span>が付いた項目は、いつもと違う扱いです。'}</p></details>`);
     rules.insertAdjacentHTML('beforeend', ruleLine(e,'eligibility'));
     rules.insertAdjacentHTML('beforeend', ruleLine(e,'indivEvents'));
     rules.insertAdjacentHTML('beforeend', ruleLine(e,'relay'));
@@ -2139,30 +2258,24 @@ function EventDetailScreen(){
   const ekiden = e.type==='ekiden';
   const T = terms(e); const label = T.ans; const partLabel = T.part;
   if(canEdit){
-    if(e.type==='track'){
-      const j = judgeEligibility(e);
-      const elig = el(`<div class="card"><h3>🎯 参加資格の自動判定</h3>
-        <p class="sub">名簿と照合して自動計算（在籍児童）。資格：<b>${esc(j.eligibility)}</b></p>
-        <div class="btn-row">
-          <span class="badge b-officer">対象 ${j.eligible.length}名</span>
-          <span class="badge b-common soft">対象外 ${j.ineligible.length}名</span></div></div>`);
-      if(j.ineligible.length){
-        const det = el(`<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--muted);font-size:13px">対象外の児童を見る（${j.ineligible.length}名）</summary></details>`);
-        j.ineligible.forEach(x=>det.appendChild(el(`<div class="row" style="cursor:default;margin-top:6px"><div class="main"><b>${esc(x.child.name)}</b><small>${x.child.grade}年 ・ ${esc(x.reason)}</small></div></div>`)));
-        elig.appendChild(det);
-      }
-      box.appendChild(elig);
-    }
     const s = eventResponseSummary(e);
     const rc = el(`<div class="card"><h3 style="display:flex;align-items:center;gap:8px">📊 ${label}状況<span style="margin-left:auto;font-size:13px;font-weight:700">${s.notanswered===0?'<span class="badge b-done">完了 💮</span>':`（${s.target-s.notanswered}人／${s.target}人中）`}</span></h3>
-      <p class="sub">対象 ${s.target}名</p>
+      <p class="sub">対象 ${s.target}名　／　対象外 ${s.ineligible}名${e.type==='track'?`　（参加資格：${esc(resolveRule(e,'eligibility'))}）`:''}</p>
       <div class="btn-row" style="align-items:center">
         ${s.notanswered?`<span class="badge b-alert">🔴 未${label} ${s.notanswered}</span>`:`<span class="badge b-done">未${label} 0</span>`}
         <span class="badge" style="background:#ea580c;color:#fff;border-color:transparent">${partLabel} ${s.participate}</span>
         <span class="badge" style="background:#2563eb;color:#fff;border-color:transparent">不参加 ${s.decline}</span>
         ${s.canceled?`<span class="badge b-warn">キャンセル ${s.canceled}</span>`:''}
-        <span class="badge b-common soft" style="margin-left:1.6em;opacity:.7">対象外 ${s.ineligible}</span>
       </div></div>`);
+    // 対象外の児童は折りたたみで確認できるようにする（旧「参加資格の自動判定」から移設）
+    if(e.type==='track'){
+      const j = judgeEligibility(e);
+      if(j.ineligible.length){
+        const det = el(`<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--muted);font-size:13px">対象外の児童を見る（${j.ineligible.length}名）</summary></details>`);
+        j.ineligible.forEach(x=>det.appendChild(el(`<div class="row" style="cursor:default;margin-top:6px"><div class="main"><b>${esc(x.child.name)}</b><small>${x.child.grade}年 ・ ${esc(x.reason)}</small></div></div>`)));
+        rc.appendChild(det);
+      }
+    }
     const openResp = el(`<button class="btn btn-officer" style="margin-top:10px">${label}状況を見る・代理入力</button>`);
     openResp.onclick = ()=>go('responses',{eventId:e.id});
     rc.appendChild(openResp);
@@ -3275,7 +3388,7 @@ function EscortScreen(){
 
   // これまでの帯同（時系列）— 次に誰にお願いするかの判断材料
   const hist=el(`<div class="card"><h3>📋 これまでの帯同</h3>
-    <p class="sub">古い大会から順に並んでいます。監督・コーチのご家庭は当日コーチとして動くため「コーチ」と表示します。</p></div>`);
+    <p class="sub">古い大会から順に並んでいます。監督・コーチのご家庭は当日コーチとして動くため「コーチ」と表示します。${Session.can('admin')?'<br><small>「コーチ」にするには、管理者メニュー＞権限管理 で保護者の<b>役職</b>に「監督」「副監督」「コーチ」を入れてください。</small>':'<br><small>「コーチ」の表示は、管理者が権限管理で役職を設定すると付きます。</small>'}</p></div>`);
   const tbl=el(`<div class="table-scroll"><table class="t">
     <thead><tr><th>学年</th><th>児童名</th><th>帯同</th></tr></thead><tbody></tbody></table></div>`);
   const tb=tbl.querySelector('tbody');
@@ -3667,7 +3780,7 @@ function ChartsScreen(){
 function RecordsLogScreen(){
   const box=el('<div class="stack"></div>');
   const canAll=Session.can('officer');
-  const kids = (canAll ? DB.children.slice() : childrenOfGuardian(Session.user().guardianId))
+  const kids = (canAll ? rosterChildren() : childrenOfGuardian(Session.user().guardianId))
     .slice().sort((a,b)=>b.grade-a.grade||a.kana.localeCompare(b.kana,'ja'));
   const noKiroku = !!route.params.noKiroku;
   const MAIN=['100m','800m','1000m'];          // 2〜4列目
@@ -3762,7 +3875,7 @@ function A4RecordsScreen(){
 function RecordsListScreen(){
   const box=el('<div class="stack"></div>');
   const canAll=Session.can('officer');
-  const kids = canAll ? DB.children.slice().sort((a,b)=>b.grade-a.grade||a.kana.localeCompare(b.kana,'ja')) : childrenOfGuardian(Session.user().guardianId);
+  const kids = canAll ? rosterChildren().sort((a,b)=>b.grade-a.grade||a.kana.localeCompare(b.kana,'ja')) : childrenOfGuardian(Session.user().guardianId);
   box.appendChild(el(`<div class="card ${canAll?'edge-officer':'edge-member'}"><h2>📈 記録・自己ベスト</h2>
     <p class="sub">${canAll?'クラブ全員の記録':'お子さんの記録'}　／　<span style="color:var(--s-alert);font-weight:700">赤＝自己ベスト ⭐</span></p></div>`));
   {
@@ -3863,7 +3976,7 @@ function EventRecordsScreen(){
   const csv=[];
   const addMatrix=(card,name,date,recs)=>{
     const ids=[...new Set(recs.map(r=>r.childId))];
-    const parts=ids.map(getChild).filter(Boolean).sort((a,b)=>b.grade-a.grade||a.kana.localeCompare(b.kana,'ja'));
+    const parts=ids.map(getChild).filter(isOnRoster).sort((a,b)=>b.grade-a.grade||a.kana.localeCompare(b.kana,'ja'));   // 卒団・退会は出さない
     const items=[...new Set(recs.map(r=>r.item))].sort(recItemSort);
     const wrap=el(`<div class="rtwrap"></div>`);
     const t=el(`<table class="rtable"><thead><tr><th class="n">氏名（学年）</th>${items.map(i=>`<th>${esc(i)}</th>`).join('')}</tr></thead><tbody></tbody></table>`);
