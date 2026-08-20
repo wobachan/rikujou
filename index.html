@@ -271,7 +271,7 @@ const uid = (p) => p + '_' + Math.random().toString(36).slice(2,8);
    role_assignments / club_settings ...
    ============================================================= */
 const CURRENT_YEAR = 2026;
-const APP_VERSION = '2026-08-20 申込公開・リレー5段階・支払記録・練習記録・グラフ'; // アップロード後の確認用（この日時が変わると最新データに自動更新）
+const APP_VERSION = '2026-08-20 個人別の記録一覧・エントリー様式は氏名'; // アップロード後の確認用（この日時が変わると最新データに自動更新）
 const APP_HOME_URL = 'https://wobachan.github.io/rikujou/'; // LINE文面に載せるアプリのURL（本番では大会ページへの直接リンクを自動生成予定）
 
 function seedDB(){
@@ -894,7 +894,7 @@ function render(){
     events:'大会', eventDetail:'大会ページ', eventEdit:'大会の登録・編集', eventImport:'大会の一括取り込み',
     apply:'参加申込', responses:'回答状況',
     payments:'参加費の徴収・支払い', relay:'リレー編成', escort:'帯同決定', submission:'申込完了の記録', lineText:'LINE文面',
-    recordEntry:'記録入力', records:'記録・自己ベスト', recordsLog:'記録の時系列一覧', charts:'記録のグラフ', practices:'練習の記録', practiceDetail:'練習の記録', practiceEdit:'練習の記録（編集）', a4records:'A4自己ベスト一覧', recordsByEvent:'大会別の記録一覧', docsCleanup:'古い資料の整理',
+    recordEntry:'記録入力', records:'記録・自己ベスト', recordsLog:'個人別の記録一覧', charts:'記録のグラフ', practices:'練習の記録', practiceDetail:'練習の記録', practiceEdit:'練習の記録（編集）', a4records:'A4自己ベスト一覧', recordsByEvent:'大会別の記録一覧', docsCleanup:'古い資料の整理',
     content:'クラブ情報', contentDetail:'詳細', contentEdit:'編集', search:'検索', yearUpdate:'年度更新',
     venues:'会場情報', venueDetail:'会場の詳細', venueEdit:'会場の登録・編集', backup:'一括バックアップ・復元', permissions:'機能・権限一覧',
   };
@@ -1766,10 +1766,22 @@ function downloadEntrySheet(ev){
 
 /* 大会申込書（クラブの公式様式に合わせた列で書き出し）— トラック向け */
 function toKatakana(s){ return String(s||'').replace(/[ぁ-ゖ]/g, ch=>String.fromCharCode(ch.charCodeAt(0)+0x60)); }
+// 全角カタカナ → 半角カタカナ（公式様式のフリガナ欄が半角のため）
+const HANKANA={'ガ':'ｶﾞ','ギ':'ｷﾞ','グ':'ｸﾞ','ゲ':'ｹﾞ','ゴ':'ｺﾞ','ザ':'ｻﾞ','ジ':'ｼﾞ','ズ':'ｽﾞ','ゼ':'ｾﾞ','ゾ':'ｿﾞ',
+ 'ダ':'ﾀﾞ','ヂ':'ﾁﾞ','ヅ':'ﾂﾞ','デ':'ﾃﾞ','ド':'ﾄﾞ','バ':'ﾊﾞ','ビ':'ﾋﾞ','ブ':'ﾌﾞ','ベ':'ﾍﾞ','ボ':'ﾎﾞ',
+ 'パ':'ﾊﾟ','ピ':'ﾋﾟ','プ':'ﾌﾟ','ペ':'ﾍﾟ','ポ':'ﾎﾟ','ヴ':'ｳﾞ',
+ 'ア':'ｱ','イ':'ｲ','ウ':'ｳ','エ':'ｴ','オ':'ｵ','カ':'ｶ','キ':'ｷ','ク':'ｸ','ケ':'ｹ','コ':'ｺ',
+ 'サ':'ｻ','シ':'ｼ','ス':'ｽ','セ':'ｾ','ソ':'ｿ','タ':'ﾀ','チ':'ﾁ','ツ':'ﾂ','テ':'ﾃ','ト':'ﾄ',
+ 'ナ':'ﾅ','ニ':'ﾆ','ヌ':'ﾇ','ネ':'ﾈ','ノ':'ﾉ','ハ':'ﾊ','ヒ':'ﾋ','フ':'ﾌ','ヘ':'ﾍ','ホ':'ﾎ',
+ 'マ':'ﾏ','ミ':'ﾐ','ム':'ﾑ','メ':'ﾒ','モ':'ﾓ','ヤ':'ﾔ','ユ':'ﾕ','ヨ':'ﾖ',
+ 'ラ':'ﾗ','リ':'ﾘ','ル':'ﾙ','レ':'ﾚ','ロ':'ﾛ','ワ':'ﾜ','ヲ':'ｦ','ン':'ﾝ',
+ 'ァ':'ｧ','ィ':'ｨ','ゥ':'ｩ','ェ':'ｪ','ォ':'ｫ','ッ':'ｯ','ャ':'ｬ','ュ':'ｭ','ョ':'ｮ',
+ 'ー':'ｰ','、':'､','。':'｡','・':'･','　':' '};
+function toHalfKana(s){ return toKatakana(s).split('').map(ch=>HANKANA[ch]!==undefined?HANKANA[ch]:ch).join(''); }
 function fmtRefMark(m){ return String(m||'').replace(':','.'); } // 2:35.21 → 2.35.21（様式に合わせる）
 function entryEventLabel(ev, child, item){ return eventItemLabel(ev, child.grade, child.gender, item); } // 例）6年男子1000m／記録会は 男子1000m
 function entryFormRows(ev){
-  const header=['登録番号','名字','名字ﾌﾘｶﾞﾅ','学年','所属','種目1','参考記録','種目2','参考記録','リレー','参考記録'];
+  const header=['登録番号','氏名','氏名ﾌﾘｶﾞﾅ','学年','所属','種目1','参考記録','種目2','参考記録','リレー','参考記録'];
   const rows=[header]; const club=DB.clubSettings.clubName||'';
   DB.participations.filter(p=>p.eventId===ev.id && p.status==='participate')
     .map(p=>({p,child:getChild(p.childId)})).filter(x=>x.child)
@@ -1777,8 +1789,8 @@ function entryFormRows(ev){
     .forEach(({p,child})=>{
       const evs=(p.events||[]); const e1=evs[0], e2=evs[1];
       const relayOn = relayOffered(ev) && p.relay && p.relay!=='no';
-      const sur = String(child.name||'').split(/\s+/)[0];
-      const surKana = toKatakana(String(child.kana||'').split(/\s+/)[0]);
+      const sur = String(child.name||'').trim();              // 氏名（姓名すべて）
+      const surKana = toHalfKana(String(child.kana||'').trim()); // 氏名フリガナ（半角カタカナ）
       rows.push([
         child.regNo||'', sur, surKana, child.grade, club,
         e1?entryEventLabel(ev,child,e1):'', e1?fmtRefMark(bestMark(child.id,e1)||''):'',
@@ -2214,8 +2226,8 @@ function EventDetailScreen(){
   if(/田島直人/.test(e.name||'')){
     const n=el(`<div class="note note-warn">📌 <b>提出する記録について</b><br>
       この大会は<b>「記録会」の記録は含めず、小陸協主催大会のベスト記録</b>を提出します。<br>
-      <small>下のボタンで「児童氏名・日付・大会名・種目・記録」を時系列で確認できます（記録会を除く切り替えつき）。</small></div>`);
-    const b=el(`<button class="btn" style="width:100%;margin-top:6px">🗓 記録の時系列一覧を見る</button>`);
+      <small>下のボタンで、個人別に「いつ・どの大会で・どの種目が何秒か」を古い順に確認できます（記録会を除く切り替えつき）。</small></div>`);
+    const b=el(`<button class="btn" style="width:100%;margin-top:6px">👤 個人別の記録一覧を見る</button>`);
     b.onclick=()=>go('recordsLog',{noKiroku:1});
     n.appendChild(b);
     box.appendChild(n);
@@ -3650,51 +3662,68 @@ function ChartsScreen(){
   return box;
 }
 
-/* 記録の時系列一覧（児童氏名・日付・大会名・種目・記録）
+/* 個人別の記録一覧（1行＝大会（日付）／列＝100m・800m・1000m・その他）
    田島直人記念大会など「記録会を除く小陸協主催大会のベスト」を出すときに使う */
 function RecordsLogScreen(){
   const box=el('<div class="stack"></div>');
   const canAll=Session.can('officer');
-  const kids = canAll ? DB.children.slice() : childrenOfGuardian(Session.user().guardianId);
-  const ids=new Set(kids.map(c=>c.id));
-  if(route.params.noKiroku!==undefined && route.params._init===undefined){ route.params._init=1; }
+  const kids = (canAll ? DB.children.slice() : childrenOfGuardian(Session.user().guardianId))
+    .slice().sort((a,b)=>b.grade-a.grade||a.kana.localeCompare(b.kana,'ja'));
   const noKiroku = !!route.params.noKiroku;
-  const head=el(`<div class="card ${canAll?'edge-officer':'edge-member'}"><h2>🗓 記録の時系列一覧</h2>
-    <p class="sub">${canAll?'クラブ全員':'お子さん'}の記録を、古い順に並べています。</p></div>`);
+  const MAIN=['100m','800m','1000m'];          // 2〜4列目
+  const head=el(`<div class="card ${canAll?'edge-officer':'edge-member'}"><h2>👤 個人別の記録一覧</h2>
+    <p class="sub">お一人ずつ、いつ・どの大会で出した記録かを古い順に並べています。列を縦に見ると種目ごとの変化が分かります。</p></div>`);
   const tg=el(`<label style="display:flex;align-items:center;gap:8px;padding:8px 0"><input type="checkbox" ${noKiroku?'checked':''} style="width:20px;height:20px"> <span><b>「記録会」を除く</b>（小陸協主催大会のみ）</span></label>`);
   tg.querySelector('input').onchange=e=>{ route.params.noKiroku = e.target.checked?1:0; render(); };
   head.appendChild(tg);
   box.appendChild(head);
 
-  let recs=DB.records.filter(r=>ids.has(r.childId));
-  if(noKiroku) recs=recs.filter(r=>!/記録会/.test(r.eventName||''));
-  recs=recs.slice().sort((a,b)=> (a.date||'').localeCompare(b.date||'') || String(a.childId).localeCompare(String(b.childId)) || itemDistance(a.item)-itemDistance(b.item));
-  if(!recs.length){ box.appendChild(el(`<div class="note note-info">該当する記録がありません。</div>`)); box.appendChild(returnBtn()); return box; }
-
-  const rows=[['児童氏名','日付','大会名','種目','記録','順位','学年']];
-  const tbl=el(`<div class="card"><div class="table-scroll"><table class="t">
-    <thead><tr><th>児童氏名</th><th>日付</th><th>大会名</th><th>種目</th><th>記録</th></tr></thead><tbody></tbody></table></div></div>`);
-  const tb=tbl.querySelector('tbody');
-  recs.forEach(r=>{
-    const c=getChild(r.childId); if(!c) return;
-    const pb = bestMark(c.id,r.item)===r.mark;
-    rows.push([c.name, fmtDateShort(r.date), r.eventName||'', r.item, r.mark, r.rank!=null?r.rank:'', r.grade!=null?r.grade:'']);
-    tb.appendChild(el(`<tr>
-      <td>${esc(nameNo(c))}<br><small style="color:var(--muted)">${r.grade!=null?r.grade:c.grade}年</small></td>
-      <td style="white-space:nowrap">${esc(fmtDateShort(r.date))}</td>
-      <td>${esc(r.eventName||'—')}</td>
-      <td style="white-space:nowrap">${esc(r.item)}</td>
-      <td style="white-space:nowrap${pb?';color:var(--s-alert);font-weight:700':''}">${esc(r.mark)}${r.rank!=null?` <small>(${r.rank}位)</small>`:''}${pb?' ⭐':''}</td></tr>`));
+  const csv=[['児童氏名','学年','日付','大会名',...MAIN,'その他']];
+  let shown=0;
+  kids.forEach(c=>{
+    let recs=DB.records.filter(r=>r.childId===c.id);
+    if(noKiroku) recs=recs.filter(r=>!/記録会/.test(r.eventName||''));
+    if(!recs.length) return;
+    shown++;
+    // 大会（開催）ごとにまとめて古い順
+    const evs={};
+    recs.forEach(r=>{ const key=r.eventId||('nm:'+(r.eventName||'')+(r.date||''));
+      if(!evs[key]) evs[key]={name:r.eventName||'（大会名なし）', date:r.date||'', recs:[]};
+      evs[key].recs.push(r); });
+    const list=Object.values(evs).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    const card=el(`<div class="card"><h3>${esc(nameNo(c))} <small style="color:var(--muted);font-weight:400">${c.grade}年</small></h3></div>`);
+    const tbl=el(`<div class="table-scroll"><table class="t">
+      <thead><tr><th>大会（日付）</th>${MAIN.map(m=>`<th>${esc(m)}</th>`).join('')}<th>その他</th></tr></thead><tbody></tbody></table></div>`);
+    const tb=tbl.querySelector('tbody');
+    list.forEach(e=>{
+      const cell=it=>{ const r=e.recs.find(x=>x.item===it); if(!r) return '—';
+        const pb=bestMark(c.id,it)===r.mark;
+        return `<span style="${pb?'color:var(--s-alert);font-weight:700':''}">${esc(r.mark)}${r.rank!=null?` <small>(${r.rank}位)</small>`:''}${pb?' ⭐':''}</span>`; };
+      const others=e.recs.filter(r=>!MAIN.includes(r.item))
+        .sort((a,b)=>itemDistance(a.item)-itemDistance(b.item))
+        .map(r=>{ const pb=bestMark(c.id,r.item)===r.mark;
+          return `<span style="white-space:nowrap;${pb?'color:var(--s-alert);font-weight:700':''}">${esc(r.item)} ${esc(r.mark)}${pb?' ⭐':''}</span>`; });
+      tb.appendChild(el(`<tr>
+        <td><b>${esc(e.name)}</b><br><small style="color:var(--muted)">${esc(fmtDateShort(e.date))}</small></td>
+        ${MAIN.map(m=>`<td style="white-space:nowrap">${cell(m)}</td>`).join('')}
+        <td>${others.join('<br>')||'—'}</td></tr>`));
+      const plain=it=>{ const r=e.recs.find(x=>x.item===it); return r?r.mark:''; };
+      csv.push([c.name, c.grade, fmtDateShort(e.date), e.name, ...MAIN.map(plain),
+        e.recs.filter(r=>!MAIN.includes(r.item)).map(r=>`${r.item} ${r.mark}`).join(' / ')]);
+    });
+    card.appendChild(tbl);
+    box.appendChild(card);
   });
-  box.appendChild(el(`<div class="card no-print"><div class="btn-row">
-    <span class="badge b-common soft">${recs.length}件</span></div></div>`));
+  if(!shown){ box.appendChild(el(`<div class="note note-info">該当する記録がありません。</div>`)); box.appendChild(returnBtn()); return box; }
+
   const tools=el(`<div class="card no-print"><div class="btn-row"></div></div>`); const tr2=tools.querySelector('.btn-row');
+  tr2.appendChild(el(`<span class="badge b-common soft">${shown}名</span>`));
   const pr=el(`<button class="btn btn-officer">🖨 印刷 / PDF保存</button>`); pr.onclick=()=>window.print(); tr2.appendChild(pr);
   const xl=el(`<button class="btn">⬇ Excel（CSV）</button>`);
-  xl.onclick=()=>downloadFile(`記録一覧_${noKiroku?'記録会をのぞく_':''}${DB.year}年度.csv`, rowsToCSV(rows), 'text/csv;charset=utf-8');
+  xl.onclick=()=>downloadFile(`個人別の記録一覧_${noKiroku?'記録会をのぞく_':''}${DB.year}年度.csv`, rowsToCSV(csv), 'text/csv;charset=utf-8');
   tr2.appendChild(xl);
-  box.appendChild(tools);
-  box.appendChild(tbl);
+  box.insertBefore(tools, box.children[1]);
+  box.appendChild(el(`<div class="hint">⭐・赤＝その種目の自己ベスト。「その他」列には200m・400m・リレーなどが入ります。</div>`));
   box.appendChild(returnBtn());
   return box;
 }
@@ -3738,7 +3767,7 @@ function RecordsListScreen(){
     <p class="sub">${canAll?'クラブ全員の記録':'お子さんの記録'}　／　<span style="color:var(--s-alert);font-weight:700">赤＝自己ベスト ⭐</span></p></div>`));
   {
     const nav=el(`<div class="card"><div class="btn-row"></div></div>`); const nr=nav.querySelector('.btn-row');
-    const lg=el(`<button class="btn">🗓 時系列の記録一覧</button>`); lg.onclick=()=>go('recordsLog',{}); nr.appendChild(lg);
+    const lg=el(`<button class="btn">👤 個人別の記録一覧</button>`); lg.onclick=()=>go('recordsLog',{}); nr.appendChild(lg);
     if(!canAll){ const g2=el(`<button class="btn">📉 記録のグラフ</button>`); g2.onclick=()=>go('charts',{}); nr.appendChild(g2); }
     if(canAll){
       const gr=el(`<button class="btn">📉 記録のグラフ</button>`); gr.onclick=()=>go('charts',{}); nr.appendChild(gr);
